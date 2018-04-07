@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.6 - ThehogNL - 7-4-2018"
+echo "Version: 2.7 - ThehogNL - 7-4-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -256,15 +256,7 @@ downloadUpgradeFile() {
 		then
 			exitFail
 		fi
-	else
-		echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
-		read QUESTION
-		if [ ! "$QUESTION" == "yes" ] 
-		then
-			exitFail
-		fi
 	fi
-
 
 	#make sure the upgrade script doesn't reboot the device after finishing
 	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-qb2.sh 
@@ -277,9 +269,18 @@ downloadUpgradeFile() {
 
 	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
 	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-qb2.sh 
+
+
 }
 
 startPrepare() {
+	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
+	read QUESTION
+	if [ ! "$QUESTION" == "yes" ] 
+	then
+		exitFail
+	fi
+
 	echo "Starting the upgrade prepare option which downloads all necessary files. No upgrade is done yet."
 
 	/usr/bin/timeout -t 600 /bin/sh $PKGCACHE/upgrade-qb2.sh qb2 $FLAV $VERSION prepare &
@@ -293,6 +294,18 @@ startPrepare() {
 	fi
 
 	echo "Done preparing."
+
+	#check disk size after download
+	FREESPACE=`df $PKGCACHE | awk '/[0-9]%/{print $(NF-2)}'`
+	if [ $FREESPACE -lt 5000 ] 
+	then
+		echo "After downloading the files the free space on the Toon is less then 5000 KB. This could cause the upgrade to fail. Do you still want to continue (yes)?"
+		read QUESTION
+		if [ ! "$QUESTION" == "yes" ] 
+		then
+			exitFail
+		fi
+	fi
 }
 
 startUpgrade() {
@@ -431,6 +444,8 @@ then
 		FLAV=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\3,p'`
 		echo "Resuming at step $STEP and we where installing version $VERSION with flavour $FLAV"
 	fi
+	# remove statusfile so we don't restart at the same point the next time
+	rm -f $STATUSFILE
 fi
 
 if [ $STEP -lt 1 ] 
