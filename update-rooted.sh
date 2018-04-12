@@ -410,7 +410,7 @@ do
 			;;
 		s)
 			echo "Forcing source: $OPTARG"
-			VERSION=$OPTARG
+			SOURCE=$OPTARG
 			;;
 		d)
 			echo "Skip starting VPN"
