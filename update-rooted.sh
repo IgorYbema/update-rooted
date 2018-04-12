@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.7 - ThehogNL - 7-4-2018"
+echo "Version: 2.8 - ThehogNL - 12-4-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -237,7 +237,7 @@ enableVPN() {
 downloadUpgradeFile() {
 
 	#try to get the upgrade file from the feed host
-	/usr/bin/wget  http://feed.hae.int/feeds/qb2/upgrade/upgrade-qb2.sh -O $PKGCACHE/upgrade-qb2.sh -T 5 -t 2 -o /dev/null
+	/usr/bin/wget  $SOURCE/qb2/upgrade/upgrade-qb2.sh -O $PKGCACHE/upgrade-qb2.sh -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
 	if [ ! $RESULT == 0 ] ; then
@@ -397,13 +397,24 @@ fixFiles() {
 
 STEP=0
 VERSION=""
+SOURCE="http://feed.hae.int/feeds"
+ENABLEVPN=true
+
 #get options
-while getopts ":v:f" opt 
+while getopts ":v:s:fd" opt 
 do
 	case $opt in
 		v)
 			echo "Forcing version: $OPTARG"
 			VERSION=$OPTARG
+			;;
+		s)
+			echo "Forcing source: $OPTARG"
+			VERSION=$OPTARG
+			;;
+		d)
+			echo "Skip starting VPN"
+			ENABLEVPN=false
 			;;
 		f)
 			echo "Only fixing files."
@@ -471,9 +482,12 @@ fi
 
 #even if we resume we need to make sure we have the firewall in place and renable the VPN
 #before opening the connection to Eneco's network we prepare the firewall to only allow access from/to the download server
-initializeFirewall
-#now we are ready to try to start the VPN
-enableVPN
+if $ENABLEVPN
+then
+	initializeFirewall
+	#now we are ready to try to start the VPN
+	enableVPN
+fi
 
 if [ $STEP -lt 3 ] 
 then
