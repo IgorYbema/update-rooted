@@ -12,3 +12,5 @@ The script without option run a normal upgrade. It first check your current vers
 With the option -v you can select a version number, ignoring any check if the version does exist and ignoring any required intermediate updates.
 
 With the option -f you skip the entire update and do a fix local files only (patching important files on the Toon required for rooting which are overwritten with an upgrade).
+
+With the option -d you can skip the VPN and firewall mods. The VPN isn't necessary if you choose another source with option -s (default source: http://feed.hae.int/feeds). This is only necessary if you have for example a test environment with own source files.
