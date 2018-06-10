@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.90  - ThehogNL - 5-6-2018"
+echo "Version: 2.91  - ThehogNL - 5-6-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -381,17 +381,16 @@ exitFail() {
 }
 
 downloadResourceFile() {
-	RESOURCEFILEURL="http://files.domoticaforum.eu/uploads/Toon/resourcefiles/resources-qb2-$VERSION.zip"
-	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-qb2-$VERSION.zip -T 5 -t 2 -o /dev/null
+	RESOURCEFILEURL="http://files.domoticaforum.eu/uploads/Toon/resourcefiles/resources-qb2-$RUNNINGVERSION.zip"
+	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-qb2-$RUNNINGVERSION.zip -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
 	if [ ! $RESULT == 0 ]
 	then 
 		echo "Could not download a resources.rcc file for this version! Continuing, but your custom apps probably dont work anymore" 
 	else 
-		/usr/bin/unzip -oq /tmp/resources-qb2-$VERSION.zip -d /qmf/qml
 		mv /qmf/qml/resources-static-base.rcc /qmf/qml/resources-static-base.rcc.backup
-		mv /qmf/qml/resources-qb2-$VERSION.rcc /qmf/qml/resources-static-base.rcc
+		/usr/bin/unzip -oq /tmp/resources-qb2-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 }
 
