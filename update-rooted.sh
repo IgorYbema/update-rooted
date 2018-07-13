@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.92  - ThehogNL - 10-6-2018"
+echo "Version: 2.93  - ThehogNL - 13-7-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -246,7 +246,7 @@ downloadUpgradeFile() {
 	fi
 
 	#check if there is a valid upgrade script
-	MD5SCRIPT="48006b5804b2a36fa1351bd92f3d7703"
+	MD5SCRIPT="b60d912b2a6cf8400b4405ffc9153e10"
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-qb2.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
 	then
@@ -392,6 +392,14 @@ downloadResourceFile() {
 		mv /qmf/qml/resources-static-base.rcc /qmf/qml/resources-static-base.rcc.backup
 		/usr/bin/unzip -oq /tmp/resources-qb2-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
+}
+
+overrideFirewallAlways () {
+
+	echo "sed -i '/-A INPUT -j HCB-INPUT/a\#override to allow all input\n-I INPUT -j ACCEPT' /etc/default/iptables.conf" > /etc/rcS.d/S39fixiptables
+	/bin/chmod +x /etc/rcS.d/S39fixiptables
+
+
 }
 
 fixFiles() {
