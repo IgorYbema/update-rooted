@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.93  - ThehogNL - 13-7-2018"
+echo "Version: 2.94  - ThehogNL - 19-7-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -260,6 +260,9 @@ downloadUpgradeFile() {
 
 	#make sure the upgrade script doesn't reboot the device after finishing
 	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-qb2.sh 
+
+        #removing the curl logging post to the servic center
+        /bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-qb2.sh
 
 
 	#fixing /etc/hosts again so that toonstore can use it
