@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.95  - ThehogNL - 28-8-2018"
+echo "Version: 2.96  - TheHogNL & Terrorsource - 28-8-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -41,6 +41,32 @@ fixInternetSettingsApp() {
 		echo "Modification in InternetSettingsApp.qml is missing. Fixing it now."
 		sed -i '/smStatus = parseInt(statemachine)/a\  if ( smStatus == _ST_INTERNET ) { smStatus = _ST_TUNNEL; }' $settingsfile
 	fi
+}
+
+EditTimeServer() {
+	#edit time server
+	sed -i '/#server time.quby.nl minpoll 8/d' /etc/chrony.conf
+	sed -i 's~server time.quby.nl minpoll 8~#server time.quby.nl minpoll 8\nserver 0.nl.pool.ntp.org minpoll 8~g' /etc/chrony.conf
+	sed -i '/#initstepslew 30 time.quby.nl/d' /etc/chrony.conf
+	sed -i 's~initstepslew 30 time.quby.nl~#initstepslew 30 time.quby.nl\ninitstepslew 30 0.nl.pool.ntp.org~g' /etc/chrony.conf
+}
+
+EditHostfile(){
+	#edit hosts file
+	#remove current comment lines + resolve ping.quby.nl to localhost
+	sed -i '/ping.quby.nl/d' /etc/hosts
+	echo '127.0.0.1    ping.quby.nl' >> /etc/hosts
+}
+
+EditActivation() {
+	#editing config_happ_scsync.xml for activation
+	sed -i 's~Standalone~Toon~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~<wizardDone>0</wizardDone>~<wizardDone>1</wizardDone>~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~<SoftwareUpdates>0</SoftwareUpdates>~<SoftwareUpdates>1</SoftwareUpdates>~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /mnt/data/qmf/config/config_happ_scsync.xml
 }
 
 removeNetworkErrorNotifications() {
@@ -84,15 +110,11 @@ installBusybox() {
 	fi
 }
 
-
-
 getVersion() {
-
 	#get versions from tor source doesnt work properly
 	#VERSIONS=`/usr/bin/curl -Nks "https://smauhhl7uskcgtro.tor2web.io/feeds/qb2/versions.$FLAV"` 
 
 	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//'`
-
 
 	if [ "$VERSIONS" == "" ]
 	then
@@ -128,9 +150,7 @@ getVersion() {
 		read VERSION
 	done
 
-
 	#determine current and next version levels and if it is allowed to upgrade to it
-
 	CURVERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
 	CURVERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
 	CURVERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
@@ -161,16 +181,26 @@ getVersion() {
 }
 
 getFlav() {
-
 	#determine current flavour
 	FLAV=`opkg list-installed base-qb2-\* | sed -r -e "s/base-qb2-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
-
 }
 
 makeBackup() {
+	#backup chrony.conf
+	echo creating backup of chrony.conf...
+	cp /etc/chrony.conf /root/chrony_`date +"%Y%m%d_%H%M%S"`.save
+	
+	#backup hosts
+	echo creating backup of hosts...
+	cp /etc/hosts /root/hosts_`date +"%Y%m%d_%H%M%S"`.save
+	
+	#backup scsync
+	echo creating backup of config_happ_scsync.xml...
+	cp /mnt/data/qmf/config/config_happ_scsync.xml /root/config_happ_scsync_`date +"%Y%m%d_%H%M%S"`.save
+
 	#save current iptables config 
 	/usr/sbin/iptables-save > /root/iptables.save
-
+			
 	#and backup the default iptables file and passwd file
 	if [ ! -f /etc/default/iptables.conf ] 
 	then 
@@ -189,7 +219,6 @@ makeBackup() {
 }
 
 initializeFirewall() {
-
 	#create a new iptables chain for this upgrade process and insert it in front of all rules
 	/usr/sbin/iptables -N UPDATE-INPUT
 	/usr/sbin/iptables -I INPUT -j UPDATE-INPUT
@@ -199,7 +228,6 @@ initializeFirewall() {
 	#drop all VPN traffic (for now)
 	/usr/sbin/iptables -A UPDATE-INPUT -i tap+ -j DROP
 	/usr/sbin/iptables -A UPDATE-INPUT -i tun+ -j DROP
-
 }
 
 enableVPN() {
@@ -235,7 +263,6 @@ enableVPN() {
 
 
 downloadUpgradeFile() {
-
 	#try to get the upgrade file from the feed host
 	/usr/bin/wget  $SOURCE/qb2/upgrade/upgrade-qb2.sh -O $PKGCACHE/upgrade-qb2.sh -T 5 -t 2 -o /dev/null
 	RESULT=$?
@@ -264,7 +291,6 @@ downloadUpgradeFile() {
         #removing the curl logging post to the servic center
         /bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-qb2.sh
 
-
 	#fixing /etc/hosts again so that toonstore can use it
 	#and change the official feed host to feed.hae.orig
 	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
@@ -272,8 +298,6 @@ downloadUpgradeFile() {
 
 	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
 	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-qb2.sh 
-
-
 }
 
 startPrepare() {
@@ -312,7 +336,6 @@ startPrepare() {
 }
 
 startUpgrade() {
-
 	echo "Are your sure you want to upgrade to" $VERSION" (yes)? This is the last moment you can stop the upgrade. Answer with 'yes' will start the upgrade."
 	read QUESTION
 	if [ ! "$QUESTION" == "yes" ] 
@@ -333,7 +356,6 @@ startUpgrade() {
 	fi
 
 	echo "Upgrade done!" 
-
 }
 
 
@@ -398,11 +420,8 @@ downloadResourceFile() {
 }
 
 overrideFirewallAlways () {
-
 	echo "sed -i '/-A INPUT -j HCB-INPUT/a\#override to allow all input\n-I INPUT -j ACCEPT' /etc/default/iptables.conf" > /etc/rcS.d/S39fixiptables
 	/bin/chmod +x /etc/rcS.d/S39fixiptables
-
-
 }
 
 fixFiles() {
@@ -429,6 +448,12 @@ fixFiles() {
 	installToonStore
 	echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
 	installBusybox
+	echo "EDITING: Time server, removes unnecessary link to Quby"
+	EditTimeServer
+	echo "EDITING: Hosts file, removes unnecessary link to Quby"
+	EditHostfile
+	echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
+	EditActivation
 }
 
 #main
