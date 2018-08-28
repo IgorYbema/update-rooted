@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.96  - TheHogNL & Terrorsource - 28-8-2018"
+echo "Version: 2.97  - TheHogNL & Terrorsource - 28-8-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -86,6 +86,22 @@ installToonStore() {
 
 	installurl="$BASEURL/$latest/$filename"
 	opkg install $installurl
+}
+
+installDropbear(){
+	#install dropbear
+	DROPBEARURL="http://files.domoticaforum.eu/uploads/Toon/dropbear_2015.71-r0_qb2.ipk"
+	opkg install $DROPBEARURL
+}
+
+installX11vnc(){
+	#uninstall current x11vnc
+	opkg remove x11vnc
+	/bin/sleep 5
+	
+	#install latest x11vnc
+	X11VNCURL="http://files.domoticaforum.eu/uploads/Toon/x11vnc_0.9.13-r3_qb2.ipk"
+	opkg install $X11VNCURL
 }
 
 installBusybox() {
@@ -185,19 +201,7 @@ getFlav() {
 	FLAV=`opkg list-installed base-qb2-\* | sed -r -e "s/base-qb2-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
 }
 
-makeBackup() {
-	#backup chrony.conf
-	echo creating backup of chrony.conf...
-	cp /etc/chrony.conf /root/chrony_`date +"%Y%m%d_%H%M%S"`.save
-	
-	#backup hosts
-	echo creating backup of hosts...
-	cp /etc/hosts /root/hosts_`date +"%Y%m%d_%H%M%S"`.save
-	
-	#backup scsync
-	echo creating backup of config_happ_scsync.xml...
-	cp /mnt/data/qmf/config/config_happ_scsync.xml /root/config_happ_scsync_`date +"%Y%m%d_%H%M%S"`.save
-
+makeBackupUpdate() {
 	#save current iptables config 
 	/usr/sbin/iptables-save > /root/iptables.save
 			
@@ -217,6 +221,23 @@ makeBackup() {
 
 	sync
 }
+
+makeBackupFixFiles() {
+	#backup chrony.conf
+	echo creating backup of chrony.conf...
+	cp /etc/chrony.conf /root/chrony.save
+	
+	#backup hosts
+	echo creating backup of hosts...
+	cp /etc/hosts /root/hosts.save
+	
+	#backup scsync
+	echo creating backup of config_happ_scsync.xml...
+	cp /mnt/data/qmf/config/config_happ_scsync.xml /root/config_happ_scsync.save
+	
+	sync
+}
+
 
 initializeFirewall() {
 	#create a new iptables chain for this upgrade process and insert it in front of all rules
@@ -448,6 +469,8 @@ fixFiles() {
 	installToonStore
 	echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
 	installBusybox
+	echo "FIXING: Installing Dropbear for ssh access"
+	installDropbear
 	echo "EDITING: Time server, removes unnecessary link to Quby"
 	EditTimeServer
 	echo "EDITING: Hosts file, removes unnecessary link to Quby"
@@ -538,7 +561,7 @@ if [ $STEP -lt 2 ]
 then
 	STEP=2;
 	#then we make a backup of some important files, just to be sure
-	makeBackup
+	makeBackupUpdate
 	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
 fi
 
@@ -593,9 +616,21 @@ then
 	read QUESTION
 	if [ "$QUESTION" == "yes" ] 
 	then
+	makeBackupFixFiles
 	fixFiles
 	fi
 	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+fi
+if [ $STEP -lt 7 ] 
+then
+	STEP=7;
+	#some other fixing needs to be done after an upgrade
+	echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
+	read QUESTION
+	if [ "$QUESTION" == "yes" ] 
+	then
+	installX11vnc
+	fi
 fi
 
 echo "Everything done! You should reboot now! But before that take some time to check if your /etc/passwd file is still valid (contains encrypted password for user root) and if /etc/default/iptables.conf is not blocking SSH access."
