@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.97  - TheHogNL & Terrorsource - 28-8-2018"
+echo "Version: 2.98  - TheHogNL & TerrorSource - 29-8-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -43,7 +43,24 @@ fixInternetSettingsApp() {
 	fi
 }
 
-EditTimeServer() {
+editVPNconnection(){
+	#disableVPN for rooted toons
+	#enables ovpn if it is already disabled
+	sed -i 's~#ovpn:235~ovpn:235~g' /etc/inittab
+	#disables ovpn if it's enabled
+	sed -i 's~ovpn:235~#ovpn:235~g' /etc/inittab
+}
+
+editSerialConnection(){
+	# Adds serial connection
+	# remove existing serial connection if needed
+	sed -i '/# add serial/d' /etc/inittab
+	sed -i '/gett:235:respawn/d' /etc/inittab
+	# adding new serial connection:
+	sed -i '/qtqt:245/a\# add serial console access:\ngett:235:respawn:/sbin/getty -L 115200 ttymxc0 vt102' /etc/inittab
+}
+
+editTimeServer() {
 	#edit time server
 	sed -i '/#server time.quby.nl minpoll 8/d' /etc/chrony.conf
 	sed -i 's~server time.quby.nl minpoll 8~#server time.quby.nl minpoll 8\nserver 0.nl.pool.ntp.org minpoll 8~g' /etc/chrony.conf
@@ -51,14 +68,14 @@ EditTimeServer() {
 	sed -i 's~initstepslew 30 time.quby.nl~#initstepslew 30 time.quby.nl\ninitstepslew 30 0.nl.pool.ntp.org~g' /etc/chrony.conf
 }
 
-EditHostfile(){
+editHostfile(){
 	#edit hosts file
 	#remove current comment lines + resolve ping.quby.nl to localhost
 	sed -i '/ping.quby.nl/d' /etc/hosts
 	echo '127.0.0.1    ping.quby.nl' >> /etc/hosts
 }
 
-EditActivation() {
+editActivation() {
 	#editing config_happ_scsync.xml for activation
 	sed -i 's~Standalone~Toon~g' /mnt/data/qmf/config/config_happ_scsync.xml
 	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /mnt/data/qmf/config/config_happ_scsync.xml
@@ -472,11 +489,15 @@ fixFiles() {
 	echo "FIXING: Installing Dropbear for ssh access"
 	installDropbear
 	echo "EDITING: Time server, removes unnecessary link to Quby"
-	EditTimeServer
+	editTimeServer
 	echo "EDITING: Hosts file, removes unnecessary link to Quby"
-	EditHostfile
+	editHostfile
+	echo "EDITING: disable ovpn connection to quby"
+	editVPNconnection
+	echo "EDITING: Adding serial connection"
+	editSerialConnection
 	echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
-	EditActivation
+	editActivation
 }
 
 #main
