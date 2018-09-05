@@ -642,9 +642,9 @@ then
 	fi
 	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
 fi
-if [ $STEP -lt 7 ] 
+if [ $STEP -lt 8 ] 
 then
-	STEP=7;
+	STEP=8;
 	#some other fixing needs to be done after an upgrade
 	echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
 	read QUESTION
