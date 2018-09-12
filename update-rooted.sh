@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 2.98  - TheHogNL & TerrorSource - 29-8-2018"
+echo "Version: 3.00  - TheHogNL & TerrorSource - 11-9-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -112,13 +112,18 @@ installDropbear(){
 }
 
 installX11vnc(){
-	#uninstall current x11vnc
-	opkg remove x11vnc
-	/bin/sleep 5
-	
-	#install latest x11vnc
-	X11VNCURL="http://files.domoticaforum.eu/uploads/Toon/x11vnc_0.9.13-r3_qb2.ipk"
-	opkg install $X11VNCURL
+	if [ $ARCH == "nxt" ]
+	then 
+		echo "Not installing vnc for NXT yet. Not available in this version."
+	else
+		#uninstall current x11vnc
+		opkg remove x11vnc
+		/bin/sleep 5
+
+		#install latest x11vnc
+		X11VNCURL="http://files.domoticaforum.eu/uploads/Toon/x11vnc_0.9.13-r3_qb2.ipk"
+		opkg install $X11VNCURL
+	fi
 }
 
 installBusybox() {
@@ -145,7 +150,6 @@ installBusybox() {
 
 getVersion() {
 	#get versions from tor source doesnt work properly
-	#VERSIONS=`/usr/bin/curl -Nks "https://smauhhl7uskcgtro.tor2web.io/feeds/qb2/versions.$FLAV"` 
 
 	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//'`
 
@@ -157,17 +161,17 @@ getVersion() {
 	fi
 
 	#determine current version
-	RUNNINGVERSION=`opkg list-installed base-qb2-\* | sed -r -e "s/base-qb2-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
 
 	if echo $VERSIONS| grep -q $RUNNINGVERSION
 	then
-		echo "You are currently running version "$RUNNINGVERSION
+		echo "You are currently running version $RUNNINGVERSION on a $ARCH with flavour $FLAV"
 	else
 		echo "Unable to determine your current running version!"
 		echo "DEBUG information:"
 		echo "Detected: $RUNNINGVERSION"
 		echo "Available: $VERSIONS"
-		/usr/bin/opkg list-installed base-qb2-\*
+		/usr/bin/opkg list-installed base-$ARCH-\*
 		echo "END DEBUG information"
 		exit
 	fi
@@ -213,15 +217,25 @@ getVersion() {
 	fi
 }
 
+getArch() {
+	#determine current architecture
+	if grep -q nxt /etc/opkg/arch.conf
+	then
+		ARCH="nxt"
+	else
+		ARCH="qb2"
+	fi
+}
+
 getFlav() {
 	#determine current flavour
-	FLAV=`opkg list-installed base-qb2-\* | sed -r -e "s/base-qb2-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
+	FLAV=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
 }
 
 makeBackupUpdate() {
 	#save current iptables config 
 	/usr/sbin/iptables-save > /root/iptables.save
-			
+
 	#and backup the default iptables file and passwd file
 	if [ ! -f /etc/default/iptables.conf ] 
 	then 
@@ -243,15 +257,15 @@ makeBackupFixFiles() {
 	#backup chrony.conf
 	echo creating backup of chrony.conf...
 	cp /etc/chrony.conf /root/chrony.save
-	
+
 	#backup hosts
 	echo creating backup of hosts...
 	cp /etc/hosts /root/hosts.save
-	
+
 	#backup scsync
 	echo creating backup of config_happ_scsync.xml...
 	cp /mnt/data/qmf/config/config_happ_scsync.xml /root/config_happ_scsync.save
-	
+
 	sync
 }
 
@@ -272,14 +286,14 @@ enableVPN() {
 	#check if feed host is configured and there is a active route toward the host
 	#if openvpn is already running we don't need to start it manually, the FEEDHOST and FEEDROUTE should match then
 	FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
-	FEEDROUTE=`/bin/ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
+	FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	COUNT=0
 	while [ ! "$FEEDHOST" == "$FEEDROUTE" ] || [ "$FEEDHOST" = "" ] || [ "$FEEDROUTE" == "" ] ; do
 		if [ $COUNT -gt 5 ] 
 		then
 			echo "Could not enable VPN in a normal reasonable time!"
 			echo "DEBUG information:"
-			/bin/ip route
+			ip route
 			/bin/cat /etc/hosts
 			echo "END DEBUG information"
 			exitFail
@@ -289,7 +303,7 @@ enableVPN() {
 		/usr/sbin/openvpn --config /etc/openvpn/vpn.conf --verb 0 >/dev/null --daemon 
 		/bin/sleep 5
 		FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
-		FEEDROUTE=`/bin/ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
+		FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	done
 	/bin/echo "Tunnel is alive and configured."
 	#set the feedhost
@@ -302,7 +316,7 @@ enableVPN() {
 
 downloadUpgradeFile() {
 	#try to get the upgrade file from the feed host
-	/usr/bin/wget  $SOURCE/qb2/upgrade/upgrade-qb2.sh -O $PKGCACHE/upgrade-qb2.sh -T 5 -t 2 -o /dev/null
+	/usr/bin/wget  $SOURCE/$ARCH/upgrade/upgrade-$ARCH.sh -O $PKGCACHE/upgrade-$ARCH.sh -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
 	if [ ! $RESULT == 0 ] ; then
@@ -311,8 +325,13 @@ downloadUpgradeFile() {
 	fi
 
 	#check if there is a valid upgrade script
-	MD5SCRIPT="b60d912b2a6cf8400b4405ffc9153e10"
-	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-qb2.sh | cut -d\  -f1`
+	if [ "$ARCH" == "nxt" ] 
+	then
+		MD5SCRIPT="e1506963a83808b8ec2096c817f1836f"
+	else
+		MD5SCRIPT="b60d912b2a6cf8400b4405ffc9153e10"
+	fi
+	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
 	then
 		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
@@ -324,10 +343,10 @@ downloadUpgradeFile() {
 	fi
 
 	#make sure the upgrade script doesn't reboot the device after finishing
-	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-qb2.sh 
+	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-$ARCH.sh 
 
-        #removing the curl logging post to the servic center
-        /bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-qb2.sh
+	#removing the curl logging post to the servic center
+	/bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-$ARCH.sh
 
 	#fixing /etc/hosts again so that toonstore can use it
 	#and change the official feed host to feed.hae.orig
@@ -335,7 +354,7 @@ downloadUpgradeFile() {
 	echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
 
 	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
-	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-qb2.sh 
+	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-$ARCH.sh 
 }
 
 startPrepare() {
@@ -348,13 +367,13 @@ startPrepare() {
 
 	echo "Starting the upgrade prepare option which downloads all necessary files. No upgrade is done yet."
 
-	/usr/bin/timeout -t 600 /bin/sh $PKGCACHE/upgrade-qb2.sh qb2 $FLAV $VERSION prepare &
+	/bin/sh $PKGCACHE/upgrade-$ARCH.sh $ARCH $FLAV $VERSION prepare &
 	DOWNLOAD_PID=$!
 	showStatus $DOWNLOAD_PID
 
 	if ! wait $DOWNLOAD_PID
 	then
-		echo "Prepare failed. Please check the logs at $PKGCACHE/upgrade-qb2.sh.log"
+		echo "Prepare failed. Please check the logs at $PKGCACHE/upgrade-$ARCH.sh.log"
 		exitFail
 	fi
 
@@ -381,15 +400,15 @@ startUpgrade() {
 		exitFail
 	fi
 
-        echo "Starting the upgrade now! Just wait a while... It can take a few minutes."
+	echo "Starting the upgrade now! Just wait a while... It can take a few minutes."
 
-	/usr/bin/timeout -t 1800 /bin/sh $PKGCACHE/upgrade-qb2.sh qb2 $FLAV $VERSION execute &
+	/bin/sh $PKGCACHE/upgrade-$ARCH.sh $ARCH $FLAV $VERSION execute &
 	UPGRADE_PID=$!
 	showStatus $UPGRADE_PID
 
 	if ! wait $UPGRADE_PID
 	then
-		echo "Upgrade failed. Please check the logs at $PKGCACHE/upgrade-qb2.sh.log"
+		echo "Upgrade failed. Please check the logs at $PKGCACHE/upgrade-$ARCH.sh.log"
 		exitFail
 	fi
 
@@ -399,27 +418,38 @@ startUpgrade() {
 
 showStatus() {
 	STATUS_PID=$1
-        DOTS="   ..."
-        PERC=0
-        while [ $PERC -lt 100 ] && [ -e /proc/$STATUS_PID ]
-        do
-                PERC="`sed /tmp/update.status.vars -n -r -e 's,^.+item=(.+?)&items=(.+?)&.+$,\1,p' 2>/dev/null`"
-                PERC="${PERC:-0}"
+	DOTS="   ..."
+	PERC=0
+	SECONDS=0
+	while [ $PERC -lt 100 ] && [ -e /proc/$STATUS_PID ] && [ $SECONDS -lt 900 ]
+	do
+		PERC="`sed /tmp/update.status.vars -n -r -e 's,^.+item=(.+?)&items=(.+?)&.+$,\1,p' 2>/dev/null`"
+		PERC="${PERC:-0}"
 
-                # do not append newline, \r to beginning of line after print, append space to overwrite prev-longer-sentences
-                echo -n -e "Progress: $PERC% ${DOTS:0:3}    \r"
+		# do not append newline, \r to beginning of line after print, append space to overwrite prev-longer-sentences
+		echo -n -e "Progress: $PERC% ${DOTS:0:3}    \r"
 
-                # shift right
-                DOTS="${DOTS:5:1}${DOTS:0:5}"
+		# shift right
+		DOTS="${DOTS:5:1}${DOTS:0:5}"
 		sleep 1
-        done
+		SECONDS=$((SECONDS+1))
+	done
 
-	while [ -e /proc/$STATUS_PID ]
+	while [ -e /proc/$STATUS_PID ] && [ $SECONDS -lt 900 ]
 	do
 		echo -n -e "Waiting to finish. Sometimes this takes a minute or two  ${DOTS:0:3}    \r"
-                DOTS="${DOTS:5:1}${DOTS:0:5}"
+		DOTS="${DOTS:5:1}${DOTS:0:5}"
 		sleep 1
+		SECONDS=$((SECONDS+1))
 	done
+
+
+	if [ $SECONDS -ge 900 ]
+	then
+		kill -9 $STATUS_PID
+		echo "Killing process... took to long!"
+	fi
+
 	echo ""
 	rm -f /tmp/update.status.vars
 }
@@ -444,8 +474,8 @@ exitFail() {
 }
 
 downloadResourceFile() {
-	RESOURCEFILEURL="http://files.domoticaforum.eu/uploads/Toon/resourcefiles/resources-qb2-$RUNNINGVERSION.zip"
-	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-qb2-$RUNNINGVERSION.zip -T 5 -t 2 -o /dev/null
+	RESOURCEFILEURL="http://files.domoticaforum.eu/uploads/Toon/resourcefiles/resources-$ARCH-$RUNNINGVERSION.zip"
+	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-$ARCH-$RUNNINGVERSION.zip -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
 	if [ ! $RESULT == 0 ]
@@ -453,7 +483,7 @@ downloadResourceFile() {
 		echo "Could not download a resources.rcc file for this version! Continuing, but your custom apps probably dont work anymore" 
 	else 
 		mv /qmf/qml/resources-static-base.rcc /qmf/qml/resources-static-base.rcc.backup
-		/usr/bin/unzip -oq /tmp/resources-qb2-$RUNNINGVERSION.zip -d /qmf/qml
+		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 }
 
@@ -463,41 +493,47 @@ overrideFirewallAlways () {
 }
 
 fixFiles() {
-	#get the current, just installed, version (also necessary when -f is called)
-	RUNNINGVERSION=`opkg list-installed base-qb2-\* | sed -r -e "s/base-qb2-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
-	VERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
-	VERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
-	VERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
 
-	#from version 4.16 we need to download resources.rcc mod
-	if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
+	if [ $ARCH == "nxt" ]
 	then 
-		echo "FIXING: Downloading resources.rcc TSC mod for this version $RUNNINGVERSION."
-		downloadResourceFile
-	else 
-		echo "FIXING: Trying to fix Global.qml now to add all the Toonstore installed apps again." 
-		fixGlobalsFile
-		echo "FIXING: Now fixing internet settings app to fake ST_TUNNEL mode."
-		fixInternetSettingsApp
-		echo "FIXING: Now modifying notifications bar to not show any network errors" 
-		removeNetworkErrorNotifications
+		echo "Not doing fixes for NXT yet. Not available in this version."
+	else
+		#get the current, just installed, version (also necessary when -f is called)
+		RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+		VERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
+		VERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
+		VERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
+
+		#from version 4.16 we need to download resources.rcc mod
+		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
+		then 
+			echo "FIXING: Downloading resources.rcc TSC mod for this version $RUNNINGVERSION."
+			downloadResourceFile
+		else 
+			echo "FIXING: Trying to fix Global.qml now to add all the Toonstore installed apps again." 
+			fixGlobalsFile
+			echo "FIXING: Now fixing internet settings app to fake ST_TUNNEL mode."
+			fixInternetSettingsApp
+			echo "FIXING: Now modifying notifications bar to not show any network errors" 
+			removeNetworkErrorNotifications
+		fi
+		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
+		installToonStore
+		echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
+		installBusybox
+		echo "FIXING: Installing Dropbear for ssh access"
+		installDropbear
+		echo "EDITING: Time server, removes unnecessary link to Quby"
+		editTimeServer
+		echo "EDITING: Hosts file, removes unnecessary link to Quby"
+		editHostfile
+		echo "EDITING: disable ovpn connection to quby"
+		editVPNconnection
+		echo "EDITING: Adding serial connection"
+		editSerialConnection
+		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
+		editActivation
 	fi
-	echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-	installToonStore
-	echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
-	installBusybox
-	echo "FIXING: Installing Dropbear for ssh access"
-	installDropbear
-	echo "EDITING: Time server, removes unnecessary link to Quby"
-	editTimeServer
-	echo "EDITING: Hosts file, removes unnecessary link to Quby"
-	editHostfile
-	echo "EDITING: disable ovpn connection to quby"
-	editVPNconnection
-	echo "EDITING: Adding serial connection"
-	editSerialConnection
-	echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
-	editActivation
 }
 
 #main
@@ -559,6 +595,7 @@ then
 		STEP=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\1,p'`
 		VERSION=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\2,p'`
 		FLAV=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\3,p'`
+		ARCH=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\4,p'`
 		echo "Resuming at step $STEP and we where installing version $VERSION with flavour $FLAV"
 	fi
 	# remove statusfile so we don't restart at the same point the next time
@@ -568,6 +605,8 @@ fi
 if [ $STEP -lt 1 ] 
 then
 	STEP=1;
+	#get the architecture
+	getArch
 	#get the current flavour
 	getFlav
 	#we need to determine current version and to which version we want to upgrade to
@@ -575,7 +614,7 @@ then
 	then 
 		getVersion
 	fi
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 if [ $STEP -lt 2 ] 
@@ -583,7 +622,7 @@ then
 	STEP=2;
 	#then we make a backup of some important files, just to be sure
 	makeBackupUpdate
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 #even if we resume we need to make sure we have the firewall in place and renable the VPN
@@ -600,7 +639,7 @@ then
 	STEP=3;
 	#we are ready to downlaod the eneco upgrade script
 	downloadUpgradeFile
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 if [ $STEP -lt 4 ] 
@@ -608,7 +647,7 @@ then
 	STEP=4;
 	#if the script is ok, we start downloading the updates (prepare)
 	startPrepare
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 if [ $STEP -lt 5 ] 
@@ -616,7 +655,7 @@ then
 	STEP=5;
 	#and if that is succesfull we start the upgrade
 	startUpgrade
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 
@@ -625,7 +664,7 @@ then
 	STEP=6;
 	#finally we restore the important files
 	restoreBackup
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 
 
@@ -637,10 +676,10 @@ then
 	read QUESTION
 	if [ "$QUESTION" == "yes" ] 
 	then
-	makeBackupFixFiles
-	fixFiles
+		makeBackupFixFiles
+		fixFiles
 	fi
-	echo "$STEP;$VERSION;$FLAV" > $STATUSFILE
+	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
 if [ $STEP -lt 8 ] 
 then
@@ -650,7 +689,7 @@ then
 	read QUESTION
 	if [ "$QUESTION" == "yes" ] 
 	then
-	installX11vnc
+		installX11vnc
 	fi
 fi
 
