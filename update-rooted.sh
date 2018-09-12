@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.00  - TheHogNL & TerrorSource - 11-9-2018"
+echo "Version: 3.01  - TheHogNL & TerrorSource - 12-9-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -149,8 +149,6 @@ installBusybox() {
 }
 
 getVersion() {
-	#get versions from tor source doesnt work properly
-
 	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//'`
 
 	if [ "$VERSIONS" == "" ]
@@ -269,7 +267,6 @@ makeBackupFixFiles() {
 	sync
 }
 
-
 initializeFirewall() {
 	#create a new iptables chain for this upgrade process and insert it in front of all rules
 	/usr/sbin/iptables -N UPDATE-INPUT
@@ -312,7 +309,6 @@ enableVPN() {
 	#this blocks other traffic, most important blocking the service center so other changes are not pushed
 	/usr/sbin/iptables -I UPDATE-INPUT -p tcp -s $FEEDHOST -m tcp --sport 80 -j ACCEPT
 }
-
 
 downloadUpgradeFile() {
 	#try to get the upgrade file from the feed host
@@ -415,7 +411,6 @@ startUpgrade() {
 	echo "Upgrade done!" 
 }
 
-
 showStatus() {
 	STATUS_PID=$1
 	DOTS="   ..."
@@ -493,10 +488,25 @@ overrideFirewallAlways () {
 }
 
 fixFiles() {
-
 	if [ $ARCH == "nxt" ]
 	then 
-		echo "Not doing fixes for NXT yet. Not available in this version."
+		echo "Not downloading resource file for Toon2 as they are not available yet."
+		
+		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
+		installToonStore
+		echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
+		installBusybox
+		echo "FIXING: Installing Dropbear for ssh access"
+		installDropbear
+		echo "EDITING: Time server, removes unnecessary link to Quby"
+		editTimeServer
+		echo "EDITING: Hosts file, removes unnecessary link to Quby"
+		editHostfile
+		echo "EDITING: disable ovpn connection to quby"
+		editVPNconnection
+		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
+		editActivation
+		
 	else
 		#get the current, just installed, version (also necessary when -f is called)
 		RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
@@ -560,8 +570,10 @@ do
 			;;
 		f)
 			echo "Only fixing files."
-			fixFiles
-			exit	
+				makeBackupUpdate
+				fixFiles
+				installX11vnc
+			exit
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG"
