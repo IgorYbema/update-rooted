@@ -492,10 +492,6 @@ fixFiles() {
 	then 
 		echo "Not downloading resource file for Toon2 as they are not available yet."
 		
-		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-		installToonStore
-		echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
-		installBusybox
 		echo "FIXING: Installing Dropbear for ssh access"
 		installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
