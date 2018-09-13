@@ -592,11 +592,11 @@ then
 	if [ "$RESUME" == "yes" ] 
 	then 
 		echo "Ok, resuming. Trying to determine last step."
-		STEP=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\1,p'`
-		VERSION=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\2,p'`
-		FLAV=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\3,p'`
-		ARCH=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*),\4,p'`
-		echo "Resuming at step $STEP and we where installing version $VERSION with flavour $FLAV"
+		STEP=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*);(.*),\1,p'`
+		VERSION=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*);(.*),\2,p'`
+		FLAV=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*);(.*),\3,p'`
+		ARCH=`cat $PKGCACHE/updated-rooted.status | sed -n -r -e 's,([0-9]+);([0-9]+\.[0-9]+\.[0-9]+);(.*);(.*),\4,p'`
+		echo "Resuming at step $STEP and we where installing version $VERSION with flavour $FLAV in a $ARCH system"
 	fi
 	# remove statusfile so we don't restart at the same point the next time
 	rm -f $STATUSFILE
