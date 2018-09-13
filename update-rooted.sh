@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.01  - TheHogNL & TerrorSource - 12-9-2018"
+echo "Version: 3.02  - TheHogNL & TerrorSource - 13-9-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -478,6 +478,7 @@ downloadResourceFile() {
 		echo "Could not download a resources.rcc file for this version! Continuing, but your custom apps probably dont work anymore" 
 	else 
 		mv /qmf/qml/resources-static-base.rcc /qmf/qml/resources-static-base.rcc.backup
+		mv /qmf/qml/resources-static-ebl.rcc /qmf/qml/resources-static-ebl.rcc.backup
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 }
@@ -488,12 +489,30 @@ overrideFirewallAlways () {
 }
 
 fixFiles() {
+	#get the current, just installed, version (also necessary when -f is called)
+	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+	VERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
+	VERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
+	VERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
+
 	if [ $ARCH == "nxt" ]
 	then 
-		echo "Not downloading resource file for Toon2 as they are not available yet."
-		
-		echo "FIXING: Installing Dropbear for ssh access"
-		installDropbear
+		#from version 4.16 we need to download resources.rcc mod
+		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
+		then 
+			echo "FIXING: Downloading resources.rcc TSC mod for this version $RUNNINGVERSION."
+			downloadResourceFile
+		else 
+			echo "FIXING: Trying to fix Global.qml now to add all the Toonstore installed apps again." 
+			fixGlobalsFile
+			echo "FIXING: Now fixing internet settings app to fake ST_TUNNEL mode."
+			fixInternetSettingsApp
+			echo "FIXING: Now modifying notifications bar to not show any network errors" 
+			removeNetworkErrorNotifications
+		fi
+		#dropbear is not needed, no rooted toon2 without working dropbear exists
+		#echo "FIXING: Installing Dropbear for ssh access"
+		#installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
@@ -502,14 +521,8 @@ fixFiles() {
 		editVPNconnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
-		
-	else
-		#get the current, just installed, version (also necessary when -f is called)
-		RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
-		VERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
-		VERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
-		VERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
 
+	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
 		then 
@@ -566,9 +579,9 @@ do
 			;;
 		f)
 			echo "Only fixing files."
-				makeBackupUpdate
-				fixFiles
-				installX11vnc
+			makeBackupUpdate
+			fixFiles
+			installX11vnc
 			exit
 			;;
 		\?)
