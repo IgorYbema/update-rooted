@@ -4,10 +4,29 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.03  - TheHogNL & TerrorSource - 13-9-2018"
+echo "Version: 3.04  - TheHogNL & TerrorSource - 19-9-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
+
+
+autoUpdate() {
+	MD5ME=`/usr/bin/md5sum $0 | cut -d\  -f1`
+	MD5ONLINE=`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5`
+	if [ !  "$MD5ME" == "$MD5ONLINE" ]
+	then
+		echo "Warning: there is a new version of update-rooted.sh available! Do you want me to download it for you (yes/no)?" 
+		read QUESTION
+		if [  "$QUESTION" == "yes" ] 
+		then
+		        /usr/bin/wget --no-check-certificate https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -O $0 -T 5 -t 2 -o /dev/null
+			echo "Ok I downloaded the update. Restarting..." 
+			/bin/bash $0
+			exit
+		fi
+	fi
+}
+
 
 fixGlobalsFile() {
 	#determine where this Toon is storing the apps
@@ -556,6 +575,10 @@ fixFiles() {
 }
 
 #main
+
+#get recent version of this script
+autoUpdate
+
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
