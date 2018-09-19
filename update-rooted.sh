@@ -155,7 +155,7 @@ getVersion() {
 	then
 		echo "Could not determine available versions from online sources. Using older well known verion list."
 		#online versions list not available, falling back to a small well known list
-		VERSIONS="2.9.26 3.0.29 3.0.32 3.1.22 3.2.14 3.2.18 3.3.8 3.4.4 3.5.4 3.6.3 3.7.8 3.7.9 4.3.20 4.4.21 4.7.23 4.8.25 4.9.23 4.10.6 4.11.6 4.12.0 4.13.6 4.13.7"
+		VERSIONS="2.9.26 3.0.29 3.0.32 3.1.22 3.2.14 3.2.18 3.3.8 3.4.4 3.5.4 3.6.3 3.7.8 3.7.9 4.3.20 4.4.21 4.7.23 4.8.25 4.9.23 4.10.6 4.11.6 4.12.0 4.13.6 4.13.7 4.15.2 4.15.6 4.16.8 4.18.8 4.19.10"
 	fi
 
 	#determine current version
