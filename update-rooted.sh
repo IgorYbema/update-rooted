@@ -591,7 +591,7 @@ fixFiles() {
 #main
 
 #get recent version of this script
-autoUpdate
+autoUpdate $@
 
 STEP=0
 VERSION=""
