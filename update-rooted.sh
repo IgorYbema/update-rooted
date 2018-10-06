@@ -120,8 +120,7 @@ installToonStore() {
 	latest=`curl -Nks $BASEURL/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
 	filename=`curl -Nks $BASEURL/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
 
-	wget $BASEURL/$latest/$filename
-	opkg install $filename
+	opkg install $BASEURL/$latest/$filename
 }
 
 installDropbear(){
