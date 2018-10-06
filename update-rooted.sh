@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.09  - TheHogNL & TerrorSource - 6-10-2018"
+echo "Version: 3.10  - TheHogNL & TerrorSource - 6-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -102,6 +102,12 @@ editQMFTenantFile(){
 	sed -i '/test.datalab.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
 	sed -i '/eneco.bd.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
 	sed -i '/quby.count.ly/d' /HCBv2/etc/qmf_tenant.xml
+}
+
+editWifiPM(){
+	#creating file to disable wifi powermanagment after reboot
+	echo "/sbin/wl PM 0" > /etc/udhcpc.d/90tsc	
+	chmod +x /etc/udhcpc.d/90tsc
 }
 
 editActivation() {
@@ -555,6 +561,8 @@ fixFiles() {
 		editActivation
 		echo "EDITING: removing data gathering by Quby" 
 		editQMFTenantFile
+		echo "EDITING: add disable power management wifi on Toon2" 
+		editWifiPM
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -585,6 +593,8 @@ fixFiles() {
 		editSerialConnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
+		echo "EDITING: removing data gathering by Quby" 
+		editQMFTenantFile
 	fi
 }
 
