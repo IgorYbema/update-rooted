@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.07  - TheHogNL & TerrorSource - 28-9-2018"
+echo "Version: 3.08  - TheHogNL & TerrorSource - 02-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -115,18 +115,17 @@ removeNetworkErrorNotifications() {
 }
 
 installToonStore() {
-	BASEURL="http://files.domoticaforum.eu/uploads/Toon/apps/"
+	BASEURL=$SOURCEFILES/apps/
 
 	latest=`curl -Nks $BASEURL/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
 	filename=`curl -Nks $BASEURL/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
 
-	installurl="$BASEURL/$latest/$filename"
-	opkg install $installurl
+	opkg install $BASEURL/$latest/$filename
 }
 
 installDropbear(){
 	#install dropbear
-	DROPBEARURL="http://files.domoticaforum.eu/uploads/Toon/dropbear_2015.71-r0_qb2.ipk"
+	DROPBEARURL=$SOURCEFILES/dropbear_2015.71-r0_qb2.ipk
 	opkg install $DROPBEARURL
 }
 
@@ -140,7 +139,7 @@ installX11vnc(){
 		/bin/sleep 5
 
 		#install latest x11vnc
-		X11VNCURL="http://files.domoticaforum.eu/uploads/Toon/x11vnc_0.9.13-r3_qb2.ipk"
+		X11VNCURL=$SOURCEFILES/x11vnc_0.9.13-r3_qb2.ipk
 		opkg install $X11VNCURL
 	fi
 }
@@ -155,9 +154,9 @@ installBusybox() {
 	then 
 		echo "Installing custom busybox to replace the native busybox from Eneco so we have a working getty."
 
-		BUSYBOXURL="http://files.domoticaforum.eu/uploads/Toon/apps/busybox-1.27.2-r4/busybox_1.27.2-r4_qb2.ipk"
-		BUSYBOXMOUNTALLURL="http://files.domoticaforum.eu/uploads/Toon/apps/busybox-1.27.2-r4/busybox-mountall_1.27.2-r4_qb2.ipk"
-		BUSYBOXSYSLOGURL="http://files.domoticaforum.eu/uploads/Toon/apps/busybox-1.27.2-r4/busybox-syslog_1.27.2-r4_qb2.ipk"
+		BUSYBOXURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox_1.27.2-r4_qb2.ipk
+		BUSYBOXMOUNTALLURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox-mountall_1.27.2-r4_qb2.ipk
+		BUSYBOXSYSLOGURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox-syslog_1.27.2-r4_qb2.ipk
 
 		opkg install $BUSYBOXURL
 		opkg install $BUSYBOXMOUNTALLURL
@@ -488,7 +487,7 @@ exitFail() {
 }
 
 downloadResourceFile() {
-	RESOURCEFILEURL="http://files.domoticaforum.eu/uploads/Toon/resourcefiles/resources-$ARCH-$RUNNINGVERSION.zip"
+	RESOURCEFILEURL=$SOURCEFILES/resourcefiles/resources-$ARCH-$RUNNINGVERSION.zip
 	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-$ARCH-$RUNNINGVERSION.zip -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
@@ -582,6 +581,7 @@ autoUpdate
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
+SOURCEFILES="http://files.domoticaforum.eu/uploads/Toon"
 ENABLEVPN=true
 
 #get options
