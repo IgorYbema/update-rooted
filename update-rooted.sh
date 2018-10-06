@@ -21,7 +21,7 @@ autoUpdate() {
 		then
 		        /usr/bin/wget --no-check-certificate https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -O $0 -T 5 -t 2 -o /dev/null
 			echo "Ok I downloaded the update. Restarting..." 
-			/bin/sh $0
+			/bin/sh $0 $@
 			exit
 		fi
 	fi
