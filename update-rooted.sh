@@ -94,6 +94,13 @@ editHostfile(){
 	echo '127.0.0.1    ping.quby.nl' >> /etc/hosts
 }
 
+editQMFTenantFile(){
+	#removing data gathering by quby
+	sed -i '/test.datalab.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
+	sed -i '/eneco.bd.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
+	sed -i '/quby.count.ly/d' /HCBv2/etc/qmf_tenant.xml
+}
+
 editActivation() {
 	#editing config_happ_scsync.xml for activation
 	sed -i 's~Standalone~Toon~g' /mnt/data/qmf/config/config_happ_scsync.xml
@@ -115,12 +122,12 @@ removeNetworkErrorNotifications() {
 }
 
 installToonStore() {
-	BASEURL=$SOURCEFILES/apps/
+	latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
+	filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
 
-	latest=`curl -Nks $BASEURL/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
-	filename=`curl -Nks $BASEURL/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+	TOONSTOREURL=$SOURCEFILES/apps/$latest/$filename
 
-	opkg install $BASEURL/$latest/$filename
+	opkg install $TOONSTOREURL
 }
 
 installDropbear(){
@@ -281,6 +288,10 @@ makeBackupFixFiles() {
 	#backup scsync
 	echo creating backup of config_happ_scsync.xml...
 	cp /mnt/data/qmf/config/config_happ_scsync.xml /root/config_happ_scsync.save
+
+	#backup qmf tenant file
+	echo creating backup of qmf_tenant.xml.save ...
+	cp /HCBv2/etc/qmf_tenant.xml /HCBv2/etc/qmf_tenant.xml.save
 
 	sync
 }
@@ -539,7 +550,8 @@ fixFiles() {
 		editVPNconnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
-
+		echo "EDITING: removing data gathering by Quby" 
+		editQMFTenantFile
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
