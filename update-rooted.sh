@@ -629,6 +629,7 @@ do
 			echo "Only fixing files."
 			getArch
 			makeBackupUpdate
+			makeBackupFixFiles
 			fixFiles
 			installX11vnc
 			exit
