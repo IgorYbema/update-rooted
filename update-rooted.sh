@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.10  - TheHogNL & TerrorSource - 6-10-2018"
+echo "Version: 3.20  - TheHogNL & TerrorSource - 18-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -12,7 +12,7 @@ echo ""
 
 autoUpdate() {
 	MD5ME=`/usr/bin/md5sum $0 | cut -d\  -f1`
-	MD5ONLINE=`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5`
+	MD5ONLINE=`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5 | cut -d\  -f1`
 	if [ !  "$MD5ME" == "$MD5ONLINE" ]
 	then
 		echo "Warning: there is a new version of update-rooted.sh available! Do you want me to download it for you (yes/no)?" 
@@ -507,7 +507,7 @@ exitFail() {
 }
 
 downloadResourceFile() {
-	RESOURCEFILEURL=$SOURCEFILES/resourcefiles/resources-$ARCH-$RUNNINGVERSION.zip
+	RESOURCEFILEURL="http://qutility.nl/resourcefiles/resources-$ARCH-$RUNNINGVERSION.zip"
 	/usr/bin/wget  $RESOURCEFILEURL -O /tmp/resources-$ARCH-$RUNNINGVERSION.zip -T 5 -t 2 -o /dev/null
 	RESULT=$?
 
@@ -518,6 +518,19 @@ downloadResourceFile() {
 		mv /qmf/qml/resources-static-base.rcc /qmf/qml/resources-static-base.rcc.backup
 		mv /qmf/qml/resources-static-ebl.rcc /qmf/qml/resources-static-ebl.rcc.backup
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
+	fi
+	#install boot script to download TSC helper script if necessary
+	echo "if [ ! -s /usr/bin/tsc ] ; then wget -q --no-check-certificate https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -O /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	#download TSC helper script
+	if [ ! -s /usr/bin/tsc ]
+	then
+		wget -q --no-check-certificate https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -O /usr/bin/tsc
+		chmod +x /usr/bin/tsc
+	fi
+	#install tsc in inittab to run continously from boot
+	if ! grep -q tscs /etc/inittab
+	then
+		sed -i '/qtqt/a\tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab
 	fi
 }
 
