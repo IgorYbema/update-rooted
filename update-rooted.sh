@@ -9,6 +9,23 @@ echo ""
 echo "==================================================================================================================================================================="
 echo ""
 
+# YJB 19102018 usage function
+usage() {
+        echo ""
+        echo `basename $0`" [OPTION]
+
+        This script will try to upgrade your Toon using your original
+        connection with Eneco.
+        !!Running this script is at your own risk!!
+
+        Options:
+        -v <version>    Upgrade to a specfic version
+        -s Skip starting VPN
+        -f Only fix files without a version update
+        -h Display this help text
+"
+}
+
 
 autoUpdate() {
 	MD5ME=`/usr/bin/md5sum $0 | cut -d\  -f1`
@@ -623,7 +640,7 @@ SOURCEFILES="http://files.domoticaforum.eu/uploads/Toon"
 ENABLEVPN=true
 
 #get options
-while getopts ":v:s:fd" opt 
+while getopts ":v:s:fd:h" opt 
 do
 	case $opt in
 		v)
@@ -646,6 +663,9 @@ do
 			fixFiles
 			installX11vnc
 			exit
+			;;
+		h)      usage
+			exit 1
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG"
