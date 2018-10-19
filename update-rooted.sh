@@ -19,7 +19,7 @@ usage() {
         !!Running this script is at your own risk!!
 
         Options:
-        -v <version>    Upgrade to a specfic version
+        -v <version> Upgrade to a specific version
         -d Skip starting VPN
         -s <url> provide custom repo url
         -f Only fix files without a version update
