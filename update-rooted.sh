@@ -37,7 +37,7 @@ autoUpdate() {
 		read QUESTION
 		if [  "$QUESTION" == "yes" ] 
 		then
-		        /usr/bin/wget --no-check-certificate https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -O $0 -T 5 -t 2 -o /dev/null
+		        curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
 			echo "Ok I downloaded the update. Restarting..." 
 			/bin/sh $0 $@
 			exit
@@ -538,11 +538,11 @@ downloadResourceFile() {
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 	#install boot script to download TSC helper script if necessary
-	echo "if [ ! -s /usr/bin/tsc ] ; then wget -q --no-check-certificate https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -O /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	echo "if [ ! -s /usr/bin/tsc ] ; then curl -Nks https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
 	#download TSC helper script
 	if [ ! -s /usr/bin/tsc ]
 	then
-		wget -q --no-check-certificate https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -O /usr/bin/tsc
+		curl -Nks https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
 		chmod +x /usr/bin/tsc
 	fi
 	#install tsc in inittab to run continously from boot
