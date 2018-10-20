@@ -538,9 +538,9 @@ downloadResourceFile() {
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 	#install boot script to download TSC helper script if necessary
-	echo "if [ ! -s /usr/bin/tsc ] ; then curl -Nks https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then curl -Nks https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
 	#download TSC helper script
-	if [ ! -s /usr/bin/tsc ]
+	if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc
 	then
 		curl -Nks https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
 		chmod +x /usr/bin/tsc
