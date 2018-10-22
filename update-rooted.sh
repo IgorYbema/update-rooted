@@ -227,6 +227,7 @@ getVersion() {
                 if $UNATTENDED
                 then
                         /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
+			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
                 fi
 		exit
 	fi
@@ -277,6 +278,7 @@ getVersion() {
                 if $UNATTENDED
                 then
                         /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
+			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
                 else
                         echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
                 fi
@@ -542,6 +544,7 @@ exitFail() {
         if $UNATTENDED
         then
         	/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
+		echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
         fi
 	exit
 }
