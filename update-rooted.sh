@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.23  - TheHogNL & TerrorSource & yjb - 20-10-2018"
+echo "Version: 3.30  - TheHogNL & TerrorSource & yjb - 21-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -23,6 +23,7 @@ usage() {
         -d Skip starting VPN
         -s <url> provide custom repo url
         -f Only fix files without a version update
+	-u unattended mode (always answer with yes) 
         -h Display this help text
 "
 }
@@ -34,8 +35,8 @@ autoUpdate() {
 	if [ !  "$MD5ME" == "$MD5ONLINE" ]
 	then
 		echo "Warning: there is a new version of update-rooted.sh available! Do you want me to download it for you (yes/no)?" 
-		read QUESTION
-		if [  "$QUESTION" == "yes" ] 
+		if ! $UNATTENDED ; then read QUESTION ; fi	
+		if [  "$QUESTION" == "yes" ] &&  ! $UNATTENDED #no auto update in unattended mode
 		then
 		        curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
 			echo "Ok I downloaded the update. Restarting..." 
@@ -201,7 +202,7 @@ installBusybox() {
 }
 
 getVersion() {
-	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//'`
+	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
 
 	if [ "$VERSIONS" == "" ]
 	then
@@ -223,19 +224,30 @@ getVersion() {
 		echo "Available: $VERSIONS"
 		/usr/bin/opkg list-installed base-$ARCH-\*
 		echo "END DEBUG information"
+                if $UNATTENDED
+                then
+                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
+                fi
 		exit
 	fi
 
 	echo ""
 	echo "Available versions: $VERSIONS"
 	echo ""
-	echo "Which version do you want to upgrade to?" 
-	read VERSION
-	while [ "$VERSION" == "" ]  || ! ( echo $VERSION | grep -qe '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*' )  || ! (echo $VERSIONS| grep -q $VERSION)
-	do
-		echo "Please enter a valid version!"
+	if ! $UNATTENDED
+	then
+		echo "Which version do you want to upgrade to?" 
 		read VERSION
-	done
+		while [ "$VERSION" == "" ]  || ! ( echo $VERSION | grep -qe '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*' )  || ! (echo $VERSIONS| grep -q $VERSION)
+		do
+			echo "Please enter a valid version!"
+			read VERSION
+		done
+	else
+		#determine latest version in unattended mode
+		VERSION=${VERSIONS##* }	
+		echo "Unattended selected version $VERSION"
+	fi
 
 	#determine current and next version levels and if it is allowed to upgrade to it
 	CURVERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
@@ -262,8 +274,14 @@ getVersion() {
 			VERSION="2.9.26"
 		fi
 	else
-		echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
-		exit
+                if $UNATTENDED
+                then
+                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
+                else
+                        echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
+                fi
+                exit
+
 	fi
 }
 
@@ -387,8 +405,8 @@ downloadUpgradeFile() {
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
 	then
 		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
-		read QUESTION
-		if [ ! "$QUESTION" == "yes" ] 
+	 	if ! $UNATTENDED ; then read QUESTION; fi	
+		if [ ! "$QUESTION" == "yes" ] || $UNATTENDED  #also exit when untattended
 		then
 			exitFail
 		fi
@@ -411,7 +429,7 @@ downloadUpgradeFile() {
 
 startPrepare() {
 	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
-	read QUESTION
+	if ! $UNATTENDED ; then read QUESTION; fi	
 	if [ ! "$QUESTION" == "yes" ] 
 	then
 		exitFail
@@ -436,8 +454,8 @@ startPrepare() {
 	if [ $FREESPACE -lt 5000 ] 
 	then
 		echo "After downloading the files the free space on the Toon is less then 5000 KB. This could cause the upgrade to fail. Do you still want to continue (yes)?"
-		read QUESTION
-		if [ ! "$QUESTION" == "yes" ] 
+		if ! $UNATTENDED ; then read QUESTION; fi	
+		if [ ! "$QUESTION" == "yes" ]  || $UNATTENDED #fail if unattended
 		then
 			exitFail
 		fi
@@ -446,7 +464,7 @@ startPrepare() {
 
 startUpgrade() {
 	echo "Are your sure you want to upgrade to" $VERSION" (yes)? This is the last moment you can stop the upgrade. Answer with 'yes' will start the upgrade."
-	read QUESTION
+	if ! $UNATTENDED ; then read QUESTION; fi	
 	if [ ! "$QUESTION" == "yes" ] 
 	then
 		exitFail
@@ -521,6 +539,10 @@ exitFail() {
 	echo "Quitting the upgrade. It was a nice try tho..."
 	/usr/bin/killall -9 openvpn
 	/usr/sbin/iptables-restore <  /root/iptables.save
+        if $UNATTENDED
+        then
+        	/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
+        fi
 	exit
 }
 
@@ -631,17 +653,17 @@ fixFiles() {
 
 #main
 
-#get recent version of this script
-autoUpdate $@
-
+UNATTENDED=false
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
 SOURCEFILES="http://files.domoticaforum.eu/uploads/Toon"
 ENABLEVPN=true
+PROGARGS="$@"
+
 
 #get options
-while getopts ":v:s:fd:h" opt 
+while getopts ":v:s:fduh" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -651,6 +673,11 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			;;
+		u)
+			echo "Unattended mode"
+			UNATTENDED=true
+			QUESTION="yes"
 			;;
 		d)
 			echo "Skip starting VPN"
@@ -675,6 +702,9 @@ do
 	esac
 done
 
+#get recent version of this script
+autoUpdate $PROGARGS
+
 #determine where this Toon is storing the update files
 PKGCACHE='/mnt/data/update'
 if ! strings /HCBv2/sbin/hcb_config | grep -q -e "^${PKGCACHE}\$"
@@ -690,7 +720,7 @@ fi
 
 STATUSFILE="$PKGCACHE/updated-rooted.status"
 #check previous running script
-if [ -f $STATUSFILE ] 
+if [ -f $STATUSFILE ]  && ! $UNATTENED #no resume in unattended mode
 then
 	echo "Detected an unclean abort of previous running update script. Do you want me to resume (yes) or restart (no)?"
 	read RESUME
@@ -773,12 +803,12 @@ then
 fi
 
 
-if [ $STEP -lt 7 ] 
+if [ $STEP -lt 7 ]
 then
 	STEP=7;
 	#some other fixing needs to be done after an upgrade
 	echo "Upgrade is done. However each firmware upgrade will revert the changes to some files needed for a working rooted Toon. Do you want me me to try and fix a few well known issue's for you right now?"
-	read QUESTION
+	if ! $UNATTENDED ; then read QUESTION ; fi
 	if [ "$QUESTION" == "yes" ] 
 	then
 		makeBackupFixFiles
@@ -786,19 +816,26 @@ then
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
-if [ $STEP -lt 8 ] 
+if [ $STEP -lt 8 ]
 then
 	STEP=8;
 	#some other fixing needs to be done after an upgrade
 	echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
-	read QUESTION
-	if [ "$QUESTION" == "yes" ] 
+	if ! $UNATTENDED ; then read QUESTION ; fi
+	if [ "$QUESTION" == "yes" ] &&  ! $UNATTENDED #not install x11vnc in unattended mode
 	then
 		installX11vnc
 	fi
 fi
 
+
 echo "Everything done! You should reboot now! But before that take some time to check if your /etc/passwd file is still valid (contains encrypted password for user root) and if /etc/default/iptables.conf is not blocking SSH access."
 
 #remove statusfile
 rm -f $STATUSFILE
+
+if $UNATTENDED
+then
+	#reboot in autattended mode
+	shutdown -r now
+fi
