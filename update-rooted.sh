@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.30  - TheHogNL & TerrorSource & yjb - 21-10-2018"
+echo "Version: 3.31  - TheHogNL & TerrorSource & yjb - 30-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -604,6 +604,8 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
+		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
+		installToonStore
 		#dropbear is not needed, no rooted toon2 without working dropbear exists
 		#echo "FIXING: Installing Dropbear for ssh access"
 		#installDropbear
