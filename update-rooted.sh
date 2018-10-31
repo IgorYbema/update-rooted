@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.31  - TheHogNL & TerrorSource & yjb - 30-10-2018"
+echo "Version: 3.32  - TheHogNL & TerrorSource & yjb - 31-10-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -116,11 +116,13 @@ editHostfile(){
 	echo '127.0.0.1    ping.quby.nl' >> /etc/hosts
 }
 
-editQMFTenantFile(){
+editQMFConfigFile(){
 	#removing data gathering by quby
 	sed -i '/test.datalab.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
 	sed -i '/eneco.bd.toon.eu/d' /HCBv2/etc/qmf_tenant.xml
 	sed -i '/quby.count.ly/d' /HCBv2/etc/qmf_tenant.xml
+	#whitelisting web service
+	sed -i 's/<enforceWhitelist>1/<enforceWhitelist>0/' /HCBv2/etc/qmf_release.xml
 }
 
 editWifiPM(){
@@ -617,8 +619,8 @@ fixFiles() {
 		editVPNconnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
-		echo "EDITING: removing data gathering by Quby" 
-		editQMFTenantFile
+		echo "EDITING: removing data gathering by Quby and whitelisting web services" 
+		editQMFConfigFile
 		echo "EDITING: add disable power management wifi on Toon2" 
 		editWifiPM
 	else
@@ -651,8 +653,8 @@ fixFiles() {
 		editSerialConnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
-		echo "EDITING: removing data gathering by Quby" 
-		editQMFTenantFile
+		echo "EDITING: removing data gathering by Quby and whitelisting web services" 
+		editQMFConfigFile
 	fi
 }
 
