@@ -403,7 +403,7 @@ downloadUpgradeFile() {
 	then
 		MD5SCRIPT="e1506963a83808b8ec2096c817f1836f"
 	else
-		MD5SCRIPT="b60d912b2a6cf8400b4405ffc9153e10"
+		MD5SCRIPT="baead2a0b6ce054f2efedc973d92e6cc"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
