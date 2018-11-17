@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.35  - TheHogNL & TerrorSource & yjb - 16-11-2018"
+echo "Version: 3.36  - TheHogNL & TerrorSource & yjb - 17-11-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -836,7 +836,7 @@ then
 fi
 
 
-echo "Everything done! You should reboot now! But before that take some time to check if your /etc/passwd file is still valid (contains encrypted password for user root) and if /etc/default/iptables.conf is not blocking SSH access."
+echo "Everything done! You should reboot now!"
 
 #remove statusfile
 rm -f $STATUSFILE
