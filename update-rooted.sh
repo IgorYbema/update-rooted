@@ -133,13 +133,13 @@ editWifiPM(){
 
 editActivation() {
 	#editing config_happ_scsync.xml for activation
-	sed -i 's~Standalone~Toon~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<wizardDone>0</wizardDone>~<wizardDone>1</wizardDone>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<SoftwareUpdates>0</SoftwareUpdates>~<SoftwareUpdates>1</SoftwareUpdates>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~Standalone~Toon~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<wizardDone>0</wizardDone>~<wizardDone>1</wizardDone>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<SoftwareUpdates>0</SoftwareUpdates>~<SoftwareUpdates>1</SoftwareUpdates>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /qmf/config/config_happ_scsync.xml
+	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /qmf/config/config_happ_scsync.xml
 }
 
 removeNetworkErrorNotifications() {
@@ -403,7 +403,7 @@ downloadUpgradeFile() {
 	then
 		MD5SCRIPT="dde5c6e7921dc85117658bcb6673fcd6"
 	else
-		MD5SCRIPT="30b331d92f201ca8d4e9d7cadb149757"
+		MD5SCRIPT="d9c70efa41fa9a6c6761d4c8a38bf5e5"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
