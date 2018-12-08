@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.37  - TheHogNL & TerrorSource & yjb - 24-11-2018"
+echo "Version: 3.38  - TheHogNL & TerrorSource & yjb - 8-12-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -639,8 +639,9 @@ fixFiles() {
 		fi
 		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
 		installToonStore
-		echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
-		installBusybox
+		#busybox update disabled due to issues
+		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
+		#installBusybox
 		echo "FIXING: Installing Dropbear for ssh access"
 		installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
