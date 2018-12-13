@@ -422,6 +422,9 @@ downloadUpgradeFile() {
 	#removing the curl logging post to the servic center
 	/bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-$ARCH.sh
 
+	#removing the pre exit BXT request (do not show restarting during update)
+	/bin/sed -i 's/-n InitiatePreExit/-n InitiatePreExit -t/' $PKGCACHE/upgrade-$ARCH.sh
+
 	#fixing /etc/hosts again so that toonstore can use it
 	#and change the official feed host to feed.hae.orig
 	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
