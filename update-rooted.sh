@@ -4,28 +4,28 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.40  - TheHogNL & TerrorSource & yjb - 13-12-2018"
+echo "Version: 3.41  - TheHogNL & TerrorSource & yjb - 19-12-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
 
 # YJB 19102018 usage function
 usage() {
-        echo ""
-        echo `basename $0`" [OPTION]
+	echo ""
+	echo `basename $0`" [OPTION]
 
-        This script will try to upgrade your Toon using your original
-        connection with Eneco.
-        !!Running this script is at your own risk!!
+	This script will try to upgrade your Toon using your original
+	connection with Eneco.
+	!!Running this script is at your own risk!!
 
-        Options:
-        -v <version> Upgrade to a specific version
-        -d Skip starting VPN
-        -s <url> provide custom repo url
-        -f Only fix files without a version update
+	Options:
+	-v <version> Upgrade to a specific version
+	-d Skip starting VPN
+	-s <url> provide custom repo url
+	-f Only fix files without a version update
 	-u unattended mode (always answer with yes) 
-        -h Display this help text
-"
+	-h Display this help text
+	"
 }
 
 
@@ -38,7 +38,7 @@ autoUpdate() {
 		if ! $UNATTENDED ; then read QUESTION ; fi	
 		if [  "$QUESTION" == "yes" ] &&  ! $UNATTENDED #no auto update in unattended mode
 		then
-		        curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
+			curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
 			echo "Ok I downloaded the update. Restarting..." 
 			/bin/sh $0 $@
 			exit
@@ -151,13 +151,17 @@ removeNetworkErrorNotifications() {
 	fi
 }
 
-installToonStore() {
-	latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
-	filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+installToonStoreApps() {
+	#we assume that all symbolic linked dirs are toonstore installed apps - IS THAT OK?
+	for a in `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##'`
+	do
+		latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
+		filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
 
-	TOONSTOREURL=$SOURCEFILES/apps/$latest/$filename
+		APPURL=$SOURCEFILES/apps/$latest/$filename
 
-	opkg install $TOONSTOREURL
+		opkg install $APPURL
+	done
 }
 
 installDropbear(){
@@ -226,11 +230,11 @@ getVersion() {
 		echo "Available: $VERSIONS"
 		/usr/bin/opkg list-installed base-$ARCH-\*
 		echo "END DEBUG information"
-                if $UNATTENDED
-                then
-                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
+		if $UNATTENDED
+		then
+			/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
 			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-                fi
+		fi
 		exit
 	fi
 
@@ -277,14 +281,14 @@ getVersion() {
 			VERSION="2.9.26"
 		fi
 	else
-                if $UNATTENDED
-                then
-                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
+		if $UNATTENDED
+		then
+			/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
 			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-                else
-                        echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
-                fi
-                exit
+		else
+			echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
+		fi
+		exit
 
 	fi
 }
@@ -409,7 +413,7 @@ downloadUpgradeFile() {
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
 	then
 		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
-	 	if ! $UNATTENDED ; then read QUESTION; fi	
+		if ! $UNATTENDED ; then read QUESTION; fi	
 		if [ ! "$QUESTION" == "yes" ] || $UNATTENDED  #also exit when untattended
 		then
 			exitFail
@@ -546,11 +550,11 @@ exitFail() {
 	echo "Quitting the upgrade. It was a nice try tho..."
 	/usr/bin/killall -9 openvpn
 	/usr/sbin/iptables-restore <  /root/iptables.save
-        if $UNATTENDED
-        then
-        	/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
+	if $UNATTENDED
+	then
+		/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
 		echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-        fi
+	fi
 	exit
 }
 
@@ -609,8 +613,8 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-		installToonStore
+		echo "FIXING: Now updating all toonstore installed apps"
+		installToonStoreApps
 		#dropbear is not needed, no rooted toon2 without working dropbear exists
 		#echo "FIXING: Installing Dropbear for ssh access"
 		#installDropbear
@@ -640,8 +644,8 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-		installToonStore
+		echo "FIXING: Now updating all toonstore installed apps"
+		installToonStoreApps
 		#busybox update disabled due to issues
 		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
 		#installBusybox
