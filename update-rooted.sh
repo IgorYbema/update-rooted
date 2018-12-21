@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.41  - TheHogNL & TerrorSource & yjb - 19-12-2018"
+echo "Version: 3.42  - TheHogNL & TerrorSource & yjb - 21-12-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -153,7 +153,8 @@ removeNetworkErrorNotifications() {
 
 installToonStoreApps() {
 	#we assume that all symbolic linked dirs are toonstore installed apps - IS THAT OK?
-	for a in `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##'`
+	#toonstore is mandatory, if not yet installed, install it anyway
+	for a in toonstore `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##' | grep -v toonstore`
 	do
 		latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
 		filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
