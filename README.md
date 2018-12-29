@@ -15,6 +15,8 @@ With the option -f you skip the entire update and do a fix local files only (pat
 
 With the option -d you can skip the VPN and firewall mods. The VPN isn't necessary if you choose another source with option -s (default source: http://feed.hae.int/feeds). This is only necessary if you have for example a test environment with own source files.
 
+With the option -u you can run an unattended firmware upgrade. It will not ask for any questions and will fetch the latest possible firmware. It will also reboot after the upgrade. Use with care!
+
 ## observed issues
 
 Users reported a few issue's while running the update. Which include:
