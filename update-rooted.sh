@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.42  - TheHogNL & TerrorSource & yjb - 21-12-2018"
+echo "Version: 3.43  - TheHogNL & TerrorSource & yjb - 21-12-2018"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -20,6 +20,8 @@ usage() {
 
 	Options:
 	-v <version> Upgrade to a specific version
+	-a Activation only
+	-b Installation of Busybox, OWN RISK !
 	-d Skip starting VPN
 	-s <url> provide custom repo url
 	-f Only fix files without a version update
@@ -679,7 +681,7 @@ PROGARGS="$@"
 
 
 #get options
-while getopts ":v:s:fduh" opt $PROGARGS
+while getopts ":v:s:abfduh" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -689,6 +691,16 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			;;
+		a)
+			echo "Auto activation"
+			editActivation
+			exit
+			;;
+		b)
+			echo "Busybox installation"
+			installBusybox
+			exit
 			;;
 		u)
 			echo "Unattended mode"
@@ -705,7 +717,6 @@ do
 			makeBackupUpdate
 			makeBackupFixFiles
 			fixFiles
-			installX11vnc
 			exit
 			;;
 		h)      usage
