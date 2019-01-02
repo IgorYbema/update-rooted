@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.43  - TheHogNL & TerrorSource & yjb - 21-12-2018"
+echo "Version: 3.43  - TheHogNL & TerrorSource & yjb - 02-01-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
