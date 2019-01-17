@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.42  - TheHogNL & TerrorSource & yjb - 21-12-2018"
+echo "Version: 3.43  - TheHogNL & TerrorSource & yjb - 17-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -269,7 +269,7 @@ getVersion() {
 	then
 		if [ $CURVERS_MAJOR -ge 3 ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a "$RUNNINGVERSION" == "2.9.26" ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a $CURVERS_MINOR -ge 10 ] || [ $VERS_MAJOR -lt 3 ]
 		then
-			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ $VERS_MAJOR -ge 4 -a $VERS_MINOR -ge 11 -a "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ]
+			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ $VERS_MAJOR -ge 4 -a $VERS_MINOR -ge 11 -a "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ] || [ $CURVERS_MAJOR -ge 5 ]
 			then
 				echo "Alright, I will try to upgrade to" $VERSION
 			else
