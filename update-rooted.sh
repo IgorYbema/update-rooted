@@ -20,6 +20,8 @@ usage() {
 
 	Options:
 	-v <version> Upgrade to a specific version
+	-a Activation only
+	-b Installation of Busybox, OWN RISK !
 	-d Skip starting VPN
 	-s <url> provide custom repo url
 	-f Only fix files without a version update
@@ -686,7 +688,7 @@ PROGARGS="$@"
 
 
 #get options
-while getopts ":v:s:fduh" opt $PROGARGS
+while getopts ":v:s:abfduh" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -696,6 +698,16 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			;;
+		a)
+			echo "Auto activation"
+			editActivation
+			exit
+			;;
+		b)
+			echo "Busybox installation"
+			installBusybox
+			exit
 			;;
 		u)
 			echo "Unattended mode"
@@ -712,7 +724,6 @@ do
 			makeBackupUpdate
 			makeBackupFixFiles
 			fixFiles
-			installX11vnc
 			exit
 			;;
 		h)      usage
