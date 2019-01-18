@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.43  - TheHogNL & TerrorSource & yjb - 17-1-2019"
+echo "Version: 3.44  - TheHogNL & TerrorSource & yjb - 18-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -31,14 +31,14 @@ usage() {
 
 autoUpdate() {
 	MD5ME=`/usr/bin/md5sum $0 | cut -d\  -f1`
-	MD5ONLINE=`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5 | cut -d\  -f1`
+	MD5ONLINE=`curl --compressed -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5 | cut -d\  -f1`
 	if [ !  "$MD5ME" == "$MD5ONLINE" ]
 	then
 		echo "Warning: there is a new version of update-rooted.sh available! Do you want me to download it for you (yes/no)?" 
 		if ! $UNATTENDED ; then read QUESTION ; fi	
 		if [  "$QUESTION" == "yes" ] &&  ! $UNATTENDED #no auto update in unattended mode
 		then
-			curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
+			curl --compressed -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
 			echo "Ok I downloaded the update. Restarting..." 
 			/bin/sh $0 $@
 			exit
@@ -156,12 +156,19 @@ installToonStoreApps() {
 	#toonstore is mandatory, if not yet installed, install it anyway
 	for a in toonstore `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##' | grep -v toonstore`
 	do
-		latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
-		filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+		latest=`curl -Nks --compressed $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
+		if [ -n $latest ]
+		then
+			filename=`curl -Nks --compressed $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+			if [ -n $filename ] 
+			then
+				APPURL=$SOURCEFILES/apps/$latest/$filename
+				opkg install $APPURL
+			fi
+		else
+			echo "Could not find $a in toonstore repo!"
+		fi
 
-		APPURL=$SOURCEFILES/apps/$latest/$filename
-
-		opkg install $APPURL
 	done
 }
 
@@ -209,7 +216,7 @@ installBusybox() {
 }
 
 getVersion() {
-	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
+	VERSIONS=`/usr/bin/curl -Nks --compressed "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
 
 	if [ "$VERSIONS" == "" ]
 	then
@@ -577,7 +584,7 @@ downloadResourceFile() {
 	#download TSC helper script
 	if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc
 	then
-		/usr/bin/curl -Nks  --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
+		/usr/bin/curl --compressed -Nks  --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
 		chmod +x /usr/bin/tsc
 	fi
 	#install tsc in inittab to run continously from boot
