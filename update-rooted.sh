@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.45  - TheHogNL & TerrorSource & yjb - 18-1-2019"
+echo "Version: 3.46  - TheHogNL & TerrorSource & yjb - 21-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -340,6 +340,10 @@ makeBackupUpdate() {
 }
 
 makeBackupFixFiles() {
+	#backup inittab
+	echo creating backup of inittab...
+	cp /etc/inittab /root/inittab.save
+
 	#backup chrony.conf
 	echo creating backup of chrony.conf...
 	cp /etc/chrony.conf /root/chrony.save
@@ -449,6 +453,9 @@ downloadUpgradeFile() {
 }
 
 startPrepare() {
+	#temporary fix, sonos app issue cauasing updates to fail
+	/usr/bin/opkg remove sonos >/dev/null 2>&1	
+
 	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
 	if ! $UNATTENDED ; then read QUESTION; fi	
 	if [ ! "$QUESTION" == "yes" ] 
@@ -862,6 +869,8 @@ then
 	fi
 fi
 
+# sync the filesystem
+sync ; sync
 
 echo "Everything done! You should reboot now!"
 
