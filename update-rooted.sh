@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.47  - TheHogNL & TerrorSource & yjb - 21-1-2019"
+echo "Version: 3.48  - TheHogNL & TerrorSource & yjb - 21-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -456,8 +456,8 @@ startPrepare() {
 	#temporary fix, sonos app issue cauasing updates to fail
 	if opkg list-installed sonos | grep -q 1.0.4
 	then
-		echo "Sonos app 1.0.4 is being removed as it has issues causing problems with upgrading. Please reinstall Sonos app manually after upgrade."
-		/usr/bin/opkg remove sonos >/dev/null 2>&1	
+		echo "Sonos app 1.0.4 is being upgraded to 1.0.5 as it has issues causing problems with upgrading."
+		/usr/bin/opkg install http://files.domoticaforum.eu/uploads/Toon/apps/sonos-1.0.5/sonos_1.0.5-r0_qb2.ipk >/dev/null 2>&1	
 	fi
 
 	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
