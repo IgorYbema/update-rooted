@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.48  - TheHogNL & TerrorSource & yjb - 21-1-2019"
+echo "Version: 3.49  - TheHogNL & TerrorSource & yjb - 23-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -361,6 +361,26 @@ makeBackupFixFiles() {
 	cp /HCBv2/etc/qmf_tenant.xml /HCBv2/etc/qmf_tenant.xml.save
 
 	sync
+}
+
+checkFixedFiles() {
+	#check modified files for 0 size, if yes announce this and try to restore
+	for file in /etc/inittab /etc/chrony.conf /etc/hosts /mnt/data/qmf/config/config_happ_scsync.xml /HCBv2/etc/qmf_tenant.xml
+	do
+		if [ ! -s $file ] 
+		then
+			echo "File $file was modified but result is an empty file! Trying to restore!"
+			restorefile="$file.save"
+			cp $restorefile $file
+			sync
+			if [ -s $file ] 
+			then
+				echo "Restore of $file is good. But modifying failed. Try to rerun the script with -f"
+			else
+				echo "Restore of $file is failed! Result is also empty! Please check this file before rebooting!"
+			fi
+		fi
+	done
 }
 
 initializeFirewall() {
@@ -735,6 +755,7 @@ do
 			makeBackupUpdate
 			makeBackupFixFiles
 			fixFiles
+			checkFixedFiles
 			exit
 			;;
 		h)      usage
@@ -858,6 +879,7 @@ then
 	then
 		makeBackupFixFiles
 		fixFiles
+		checkFixedFiles
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
