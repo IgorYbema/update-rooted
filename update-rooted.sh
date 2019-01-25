@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.51  - TheHogNL & TerrorSource & yjb - 25-1-2019"
+echo "Version: 3.52  - TheHogNL & TerrorSource & yjb - 25-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -552,7 +552,7 @@ showStatus() {
 
 		# shift right
 		DOTS="${DOTS:5:1}${DOTS:0:5}"
-		sleep 1 >/dev/null 2>&1 || read -t 1  #during busybox update sleep fails, so failover to read with 1 sec timeout
+		sleep 1 >/dev/null 2>&1 || read -t 1 < /dev/tty5  #during busybox update sleep fails, so failover to read with 1 sec timeout, tty5 never gives any input
 		SECONDS=$((SECONDS+1))
 	done
 
@@ -560,7 +560,7 @@ showStatus() {
 	do
 		echo -n -e "Waiting to finish. Sometimes this takes a minute or two  ${DOTS:0:3}    \r"
 		DOTS="${DOTS:5:1}${DOTS:0:5}"
-		sleep 1 >/dev/null 2>&1 || read -t 1   #during busybox update sleep fails, so failover to read with 1 sec timeout
+		sleep 1 >/dev/null 2>&1 || read -t 1  < /dev/tty5  #during busybox update sleep fails, so failover to read with 1 sec timeout, tty5 never gives any input
 		SECONDS=$((SECONDS+1))
 	done
 
