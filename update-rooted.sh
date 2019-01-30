@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.52  - TheHogNL & TerrorSource & yjb - 25-1-2019"
+echo "Version: 3.53  - TheHogNL & TerrorSource & yjb - 25-1-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -439,9 +439,9 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="dde5c6e7921dc85117658bcb6673fcd6"
+		MD5SCRIPT="9ba9beab205a2653d664b017b18e6d04"
 	else
-		MD5SCRIPT="d9c70efa41fa9a6c6761d4c8a38bf5e5"
+		MD5SCRIPT="92170282d71f950056e7d8367f314412"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
@@ -467,6 +467,15 @@ downloadUpgradeFile() {
 	#and change the official feed host to feed.hae.orig
 	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
 	echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
+
+        #temp remove last 11 lines from bugus qb2 script from quby (30-1-2019)
+        if [ "$MD5NOW" == "92170282d71f950056e7d8367f314412" ]
+        then
+                head -n -11 $PKGCACHE/upgrade-$ARCH.sh > $PKGCACHE/upgrade-$ARCH.sh.new
+                echo "#REMOVED BOGUS lines from qb2 script" >> $PKGCACHE/upgrade-$ARCH.sh.new
+                cp $PKGCACHE/upgrade-$ARCH.sh.new $PKGCACHE/upgrade-$ARCH.sh
+        fi
+
 
 	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
 	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-$ARCH.sh 
