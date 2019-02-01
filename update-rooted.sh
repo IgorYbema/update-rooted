@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.54  - TheHogNL & TerrorSource & yjb - 1-2-2019"
+echo "Version: 3.55  - TheHogNL & TerrorSource & yjb - 1-2-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -467,15 +467,6 @@ downloadUpgradeFile() {
 	#and change the official feed host to feed.hae.orig
 	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
 	echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
-
-        #temp remove last 11 lines from bugus qb2 script from quby (30-1-2019)
-        if [ "$MD5NOW" == "92170282d71f950056e7d8367f314412" ]
-        then
-                head -n -11 $PKGCACHE/upgrade-$ARCH.sh > $PKGCACHE/upgrade-$ARCH.sh.new
-                echo "#REMOVED BOGUS lines from qb2 script" >> $PKGCACHE/upgrade-$ARCH.sh.new
-                cp $PKGCACHE/upgrade-$ARCH.sh.new $PKGCACHE/upgrade-$ARCH.sh
-        fi
-
 
 	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
 	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-$ARCH.sh 
