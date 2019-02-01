@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.53  - TheHogNL & TerrorSource & yjb - 25-1-2019"
+echo "Version: 3.54  - TheHogNL & TerrorSource & yjb - 1-2-2019"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
@@ -441,7 +441,7 @@ downloadUpgradeFile() {
 	then
 		MD5SCRIPT="9ba9beab205a2653d664b017b18e6d04"
 	else
-		MD5SCRIPT="92170282d71f950056e7d8367f314412"
+		MD5SCRIPT="0f1e14a01705e9c4deeca78ed9065037"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
