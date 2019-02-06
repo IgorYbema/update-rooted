@@ -7,7 +7,7 @@ The script uses the Toon original files to upgrade the Toon so there is a good c
 
 ## running the script
 
-Download the script towards your Toon. The easiest way is just to use curl:
+Download the script towards your Toon. The easiest way is just to use curl from your Toon:
 
 `curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o /root/update-rooted.sh`
 
