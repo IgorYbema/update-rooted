@@ -5,6 +5,16 @@ It will backup and repair important files which are overwritten by the upgrade. 
 
 The script uses the Toon original files to upgrade the Toon so there is a good chance the upgrade works fine. However sometimes upgrade fails due to misconfigurations of rooted Toons.
 
+## running the script
+
+Download the script towards your Toon. The easiest way is just to use curl from your Toon:
+
+`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o /root/update-rooted.sh`
+
+Then run the script with:
+
+`sh /root/update-rooted.sh`
+
 ## script options
 
 The script without any option runs a normal upgrade. It first checks your current version and will ask you to which version you want to update.

@@ -4,41 +4,46 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.36  - TheHogNL & TerrorSource & yjb - 17-11-2018"
+echo "Version: 3.55  - TheHogNL & TerrorSource & yjb - 3-2-2019"
+echo ""
+echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
+echo "https://paypal.me/pools/c/8bU3eQp1Jt"
 echo ""
 echo "==================================================================================================================================================================="
 echo ""
 
 # YJB 19102018 usage function
 usage() {
-        echo ""
-        echo `basename $0`" [OPTION]
+	echo ""
+	echo `basename $0`" [OPTION]
 
-        This script will try to upgrade your Toon using your original
-        connection with Eneco.
-        !!Running this script is at your own risk!!
+	This script will try to upgrade your Toon using your original
+	connection with Eneco.
+	!!Running this script is at your own risk!!
 
-        Options:
-        -v <version> Upgrade to a specific version
-        -d Skip starting VPN
-        -s <url> provide custom repo url
-        -f Only fix files without a version update
+	Options:
+	-v <version> Upgrade to a specific version
+	-a Activation only
+	-b Installation of Busybox, OWN RISK !
+	-d Skip starting VPN
+	-s <url> provide custom repo url
+	-f Only fix files without a version update
 	-u unattended mode (always answer with yes) 
-        -h Display this help text
-"
+	-h Display this help text
+	"
 }
 
 
 autoUpdate() {
 	MD5ME=`/usr/bin/md5sum $0 | cut -d\  -f1`
-	MD5ONLINE=`curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5 | cut -d\  -f1`
+	MD5ONLINE=`curl --compressed -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.md5 | cut -d\  -f1`
 	if [ !  "$MD5ME" == "$MD5ONLINE" ]
 	then
 		echo "Warning: there is a new version of update-rooted.sh available! Do you want me to download it for you (yes/no)?" 
 		if ! $UNATTENDED ; then read QUESTION ; fi	
 		if [  "$QUESTION" == "yes" ] &&  ! $UNATTENDED #no auto update in unattended mode
 		then
-		        curl -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
+			curl --compressed -Nks https://raw.githubusercontent.com/IgorYbema/update-rooted/master/update-rooted.sh -o $0
 			echo "Ok I downloaded the update. Restarting..." 
 			/bin/sh $0 $@
 			exit
@@ -133,13 +138,13 @@ editWifiPM(){
 
 editActivation() {
 	#editing config_happ_scsync.xml for activation
-	sed -i 's~Standalone~Toon~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<wizardDone>0</wizardDone>~<wizardDone>1</wizardDone>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<SoftwareUpdates>0</SoftwareUpdates>~<SoftwareUpdates>1</SoftwareUpdates>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /mnt/data/qmf/config/config_happ_scsync.xml
-	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /mnt/data/qmf/config/config_happ_scsync.xml
+	sed -i 's~Standalone~Toon~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<activated>0</activated>~<activated>1</activated>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<wizardDone>0</wizardDone>~<wizardDone>1</wizardDone>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<SoftwareUpdates>0</SoftwareUpdates>~<SoftwareUpdates>1</SoftwareUpdates>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /qmf/config/config_happ_scsync.xml
+	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /qmf/config/config_happ_scsync.xml
 }
 
 removeNetworkErrorNotifications() {
@@ -151,13 +156,25 @@ removeNetworkErrorNotifications() {
 	fi
 }
 
-installToonStore() {
-	latest=`curl -Nks $SOURCEFILES/apps/ToonRepo.xml | grep toonstore | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
-	filename=`curl -Nks $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+installToonStoreApps() {
+	#we assume that all symbolic linked dirs are toonstore installed apps - IS THAT OK?
+	#toonstore is mandatory, if not yet installed, install it anyway
+	for a in toonstore `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##' | grep -v toonstore`
+	do
+		latest=`curl -Nks --compressed $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
+		if [ -n $latest ]
+		then
+			filename=`curl -Nks --compressed $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+			if [ -n $filename ] 
+			then
+				APPURL=$SOURCEFILES/apps/$latest/$filename
+				opkg install $APPURL
+			fi
+		else
+			echo "Could not find $a in toonstore repo!"
+		fi
 
-	TOONSTOREURL=$SOURCEFILES/apps/$latest/$filename
-
-	opkg install $TOONSTOREURL
+	done
 }
 
 installDropbear(){
@@ -204,7 +221,7 @@ installBusybox() {
 }
 
 getVersion() {
-	VERSIONS=`/usr/bin/curl -Nks "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
+	VERSIONS=`/usr/bin/curl -Nks --compressed "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
 
 	if [ "$VERSIONS" == "" ]
 	then
@@ -226,11 +243,11 @@ getVersion() {
 		echo "Available: $VERSIONS"
 		/usr/bin/opkg list-installed base-$ARCH-\*
 		echo "END DEBUG information"
-                if $UNATTENDED
-                then
-                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
+		if $UNATTENDED
+		then
+			/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Huidige Toon firmware onbekend. Kan geen nieuwe firmware hiervoor vinden." >/dev/null 2>&1
 			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-                fi
+		fi
 		exit
 	fi
 
@@ -262,9 +279,9 @@ getVersion() {
 
 	if [ $VERS_MAJOR -gt $CURVERS_MAJOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -gt $CURVERS_MINOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -eq $CURVERS_MINOR -a $VERS_BUILD -gt $CURVERS_BUILD ]
 	then
-		if [ $CURVERS_MAJOR -ge 3 ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a "$RUNNINGVERSION" == "2.9.26" ] || [ $VERS_MAJOR -lt 3 ]
+		if [ $CURVERS_MAJOR -ge 3 ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a "$RUNNINGVERSION" == "2.9.26" ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a $CURVERS_MINOR -ge 10 ] || [ $VERS_MAJOR -lt 3 ]
 		then
-			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ $VERS_MAJOR -ge 4 -a $VERS_MINOR -ge 11 -a "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ]
+			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ] || [ $CURVERS_MAJOR -ge 5 ]
 			then
 				echo "Alright, I will try to upgrade to" $VERSION
 			else
@@ -277,14 +294,14 @@ getVersion() {
 			VERSION="2.9.26"
 		fi
 	else
-                if $UNATTENDED
-                then
-                        /qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
+		if $UNATTENDED
+		then
+			/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er is geen Toon firmware update gevonden" >/dev/null 2>&1
 			echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-                else
-                        echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
-                fi
-                exit
+		else
+			echo "Smartass.. "$VERSION" is not an upgrade for "$RUNNINGVERSION"!"
+		fi
+		exit
 
 	fi
 }
@@ -326,6 +343,10 @@ makeBackupUpdate() {
 }
 
 makeBackupFixFiles() {
+	#backup inittab
+	echo creating backup of inittab...
+	cp /etc/inittab /root/inittab.save
+
 	#backup chrony.conf
 	echo creating backup of chrony.conf...
 	cp /etc/chrony.conf /root/chrony.save
@@ -343,6 +364,26 @@ makeBackupFixFiles() {
 	cp /HCBv2/etc/qmf_tenant.xml /HCBv2/etc/qmf_tenant.xml.save
 
 	sync
+}
+
+checkFixedFiles() {
+	#check modified files for 0 size, if yes announce this and try to restore
+	for file in /etc/inittab /etc/chrony.conf /etc/hosts /mnt/data/qmf/config/config_happ_scsync.xml /HCBv2/etc/qmf_tenant.xml
+	do
+		if [ ! -s $file ] 
+		then
+			echo "File $file was modified but result is an empty file! Trying to restore!"
+			restorefile="$file.save"
+			cp $restorefile $file
+			sync
+			if [ -s $file ] 
+			then
+				echo "Restore of $file is good. But modifying failed. Try to rerun the script with -f"
+			else
+				echo "Restore of $file is failed! Result is also empty! Please check this file before rebooting!"
+			fi
+		fi
+	done
 }
 
 initializeFirewall() {
@@ -401,15 +442,15 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="dde5c6e7921dc85117658bcb6673fcd6"
+		MD5SCRIPT="9ba9beab205a2653d664b017b18e6d04"
 	else
-		MD5SCRIPT="30b331d92f201ca8d4e9d7cadb149757"
+		MD5SCRIPT="0f1e14a01705e9c4deeca78ed9065037"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
 	then
 		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
-	 	if ! $UNATTENDED ; then read QUESTION; fi	
+		if ! $UNATTENDED ; then read QUESTION; fi	
 		if [ ! "$QUESTION" == "yes" ] || $UNATTENDED  #also exit when untattended
 		then
 			exitFail
@@ -422,6 +463,9 @@ downloadUpgradeFile() {
 	#removing the curl logging post to the servic center
 	/bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-$ARCH.sh
 
+	#removing the pre exit BXT request (do not show restarting during update)
+	/bin/sed -i 's/-n InitiatePreExit/-n InitiatePreExit -t/' $PKGCACHE/upgrade-$ARCH.sh
+
 	#fixing /etc/hosts again so that toonstore can use it
 	#and change the official feed host to feed.hae.orig
 	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
@@ -432,6 +476,13 @@ downloadUpgradeFile() {
 }
 
 startPrepare() {
+	#temporary fix, sonos app issue cauasing updates to fail
+	if opkg list-installed sonos | grep -q 1.0.4
+	then
+		echo "Sonos app 1.0.4 is being upgraded to 1.0.5 as it has issues causing problems with upgrading."
+		/usr/bin/opkg install http://files.domoticaforum.eu/uploads/Toon/apps/sonos-1.0.5/sonos_1.0.5-r0_qb2.ipk >/dev/null 2>&1	
+	fi
+
 	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
 	if ! $UNATTENDED ; then read QUESTION; fi	
 	if [ ! "$QUESTION" == "yes" ] 
@@ -504,7 +555,7 @@ showStatus() {
 
 		# shift right
 		DOTS="${DOTS:5:1}${DOTS:0:5}"
-		sleep 1
+		sleep 1 >/dev/null 2>&1 || read -t 1 < /dev/tty5  #during busybox update sleep fails, so failover to read with 1 sec timeout, tty5 never gives any input
 		SECONDS=$((SECONDS+1))
 	done
 
@@ -512,7 +563,7 @@ showStatus() {
 	do
 		echo -n -e "Waiting to finish. Sometimes this takes a minute or two  ${DOTS:0:3}    \r"
 		DOTS="${DOTS:5:1}${DOTS:0:5}"
-		sleep 1
+		sleep 1 >/dev/null 2>&1 || read -t 1  < /dev/tty5  #during busybox update sleep fails, so failover to read with 1 sec timeout, tty5 never gives any input
 		SECONDS=$((SECONDS+1))
 	done
 
@@ -543,11 +594,11 @@ exitFail() {
 	echo "Quitting the upgrade. It was a nice try tho..."
 	/usr/bin/killall -9 openvpn
 	/usr/sbin/iptables-restore <  /root/iptables.save
-        if $UNATTENDED
-        then
-        	/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
+	if $UNATTENDED
+	then
+		/qmf/bin/bxt -d :happ_usermsg -s Notification -n CreateNotification -a type -v tsc -a subType -v notify -a text -v "Er ging iets mis bij het updaten van Toon Firmware. Controleer logs." >/dev/null 2>&1
 		echo "action=Failed&item=100&items=100&pkg=" > /tmp/update.status.vars
-        fi
+	fi
 	exit
 }
 
@@ -569,7 +620,7 @@ downloadResourceFile() {
 	#download TSC helper script
 	if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc
 	then
-		/usr/bin/curl -Nks  --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
+		/usr/bin/curl --compressed -Nks  --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/IgorYbema/tscSettings/master/tsc -o /usr/bin/tsc
 		chmod +x /usr/bin/tsc
 	fi
 	#install tsc in inittab to run continously from boot
@@ -606,8 +657,8 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-		installToonStore
+		echo "FIXING: Now updating all toonstore installed apps"
+		installToonStoreApps
 		#dropbear is not needed, no rooted toon2 without working dropbear exists
 		#echo "FIXING: Installing Dropbear for ssh access"
 		#installDropbear
@@ -637,10 +688,11 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now installing latest toonstore app. This fixes some files also."
-		installToonStore
-		echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
-		installBusybox
+		echo "FIXING: Now updating all toonstore installed apps"
+		installToonStoreApps
+		#busybox update disabled due to issues
+		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
+		#installBusybox
 		echo "FIXING: Installing Dropbear for ssh access"
 		installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
@@ -670,7 +722,7 @@ PROGARGS="$@"
 
 
 #get options
-while getopts ":v:s:fduh" opt $PROGARGS
+while getopts ":v:s:abfduh" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -680,6 +732,16 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			;;
+		a)
+			echo "Auto activation"
+			editActivation
+			exit
+			;;
+		b)
+			echo "Busybox installation"
+			installBusybox
+			exit
 			;;
 		u)
 			echo "Unattended mode"
@@ -696,7 +758,7 @@ do
 			makeBackupUpdate
 			makeBackupFixFiles
 			fixFiles
-			installX11vnc
+			checkFixedFiles
 			exit
 			;;
 		h)      usage
@@ -820,6 +882,7 @@ then
 	then
 		makeBackupFixFiles
 		fixFiles
+		checkFixedFiles
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
@@ -835,6 +898,8 @@ then
 	fi
 fi
 
+# sync the filesystem
+sync ; sync
 
 echo "Everything done! You should reboot now!"
 
