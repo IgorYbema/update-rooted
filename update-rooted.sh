@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.60  - TheHogNL & TerrorSource & yjb - 16-2-2019"
+echo "Version: 3.61  - TheHogNL & TerrorSource & yjb - 16-2-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -445,9 +445,9 @@ downloadUpgradeFile() {
 		MD5SCRIPT="0f1e14a01705e9c4deeca78ed9065037"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
-	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
+	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]  && $ORIGINALSOURCE
 	then
-		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
+		echo "Warning: upgrade script from Eneco server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
 		if ! $UNATTENDED ; then read QUESTION; fi	
 		if [ ! "$QUESTION" == "yes" ] || $UNATTENDED  #also exit when untattended
 		then
@@ -744,6 +744,7 @@ ONLYVPNSTART=false
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
+ORIGINALSOURCE=true	
 SOURCEFILES="http://files.domoticaforum.eu/uploads/Toon"
 ENABLEVPN=true
 PROGARGS="$@"
@@ -760,6 +761,7 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			ORIGINALSOURCE=false	
 			;;
 		a)
 			echo "Auto activation"
