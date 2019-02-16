@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.55  - TheHogNL & TerrorSource & yjb - 3-2-2019"
+echo "Version: 3.60  - TheHogNL & TerrorSource & yjb - 16-2-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -29,6 +29,7 @@ usage() {
 	-s <url> provide custom repo url
 	-f Only fix files without a version update
 	-u unattended mode (always answer with yes) 
+	-o only startup vpn and then quit (allows manual package downloads using opkg) 
 	-h Display this help text
 	"
 }
@@ -233,6 +234,16 @@ getVersion() {
 	#determine current version
 	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
 
+	#determine current OPKG latest version
+	OPKGVERSION=`opkg list base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/" | sort -t'.' -k1n,1n -k2n,2n -k3n,3n | tail -n1`
+
+	if [ ! "$OPKGVERSION" == "" ]  && [ ! "$RUNNINGVERSION" == "$OPKGVERSION" ]
+	then
+		echo "Your Toon already tried downloading version $OPKGVERSION before. Need to force this version!"
+		VERSION="$OPKGVERSION"
+		return
+	fi
+
 	if echo $VERSIONS| grep -q $RUNNINGVERSION
 	then
 		echo "You are currently running version $RUNNINGVERSION on a $ARCH with flavour $FLAV"
@@ -279,20 +290,7 @@ getVersion() {
 
 	if [ $VERS_MAJOR -gt $CURVERS_MAJOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -gt $CURVERS_MINOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -eq $CURVERS_MINOR -a $VERS_BUILD -gt $CURVERS_BUILD ]
 	then
-		if [ $CURVERS_MAJOR -ge 3 ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a "$RUNNINGVERSION" == "2.9.26" ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a $CURVERS_MINOR -ge 10 ] || [ $VERS_MAJOR -lt 3 ]
-		then
-			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ] || [ $CURVERS_MAJOR -ge 5 ]
-			then
-				echo "Alright, I will try to upgrade to" $VERSION
-			else
-				echo "You need to upgrade to 4.10.6 first! Selecting this version for you."
-				VERSION="4.10.6"
-
-			fi
-		else
-			echo "You need to upgrade to 2.9.26 first! Selecting this version for you."
-			VERSION="2.9.26"
-		fi
+		echo "Alright, I will try to upgrade to" $VERSION
 	else
 		if $UNATTENDED
 		then
@@ -710,9 +708,39 @@ fixFiles() {
 	fi
 }
 
+setOpkgFeedFiles() {
+	BASE_FEED_URL="http://feed.hae.orig/feeds"
+	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+
+	# set extra pkg system feeds
+	EXTRA_FEEDS="`wget -q "${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed" -O -`"
+	if [ "$EXTRA_FEEDS" = "" ]
+	then
+		echo "Failed retrieving '${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed', trying again verbosely:"
+		wget "${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed" -O - 2>&1
+		exitFail
+	fi
+
+	#set correct feed location for initial install
+	rm -f /etc/opkg/*-feed.conf /var/lib/opkg/lists/*
+	echo "src/gz base ${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}" > /etc/opkg/base-feed.conf
+	echo "$EXTRA_FEEDS" | {
+	while read EF
+	do
+		EF_NAME="`echo "$EF" | cut -d ' ' -f1`"
+		EF_PATH="`echo "$EF" | cut -d ' ' -f2`"
+		echo "src/gz ${EF_NAME} ${BASE_FEED_URL}/${ARCH}/${EF_PATH}" > /etc/opkg/${EF_NAME}-feed.conf
+	done;
+}
+
+echo ">> configured opkg feeds:"
+cat /etc/opkg/*-feed.conf
+}
+
 #main
 
 UNATTENDED=false
+ONLYVPNSTART=false
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
@@ -722,7 +750,7 @@ PROGARGS="$@"
 
 
 #get options
-while getopts ":v:s:abfduh" opt $PROGARGS
+while getopts ":v:s:abfduho" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -747,6 +775,11 @@ do
 			echo "Unattended mode"
 			UNATTENDED=true
 			QUESTION="yes"
+			;;
+		o)
+			echo "Only start VPN and then quit"
+			ONLYVPNSTART=true
+			VERSION="none"
 			;;
 		d)
 			echo "Skip starting VPN"
@@ -816,6 +849,9 @@ then
 	#we need to determine current version and to which version we want to upgrade to
 	if [ "$VERSION" == "" ]
 	then 
+		#temporary disable updates due to Eneco server issue's (force version will skip this)
+		echo "Currently Eneco has problems with their update servers. Therefore this script will quit. Please try again later!"
+		exit
 		getVersion
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
@@ -836,12 +872,22 @@ then
 	initializeFirewall
 	#now we are ready to try to start the VPN
 	enableVPN
+	if $ONLYVPNSTART
+	then
+		#change the official feed host to feed.hae.orig and putting back toonstore feed.hae.int to localhost
+		sed -i 's/^\(172.*\)feed.hae.int/\1feed.hae.orig/' /etc/hosts
+		echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
+		setOpkgFeedFiles
+		echo "VPN is started, OPKG sources should now be available for you. Good luck!"
+		echo "If you are done with manual package downloading, just reboot and the VPN should be closed again."
+		exit
+	fi
 fi
 
 if [ $STEP -lt 3 ] 
 then
 	STEP=3;
-	#we are ready to downlaod the eneco upgrade script
+	#we are ready to download the eneco upgrade script
 	downloadUpgradeFile
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
