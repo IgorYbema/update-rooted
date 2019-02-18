@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.61  - TheHogNL & TerrorSource & yjb - 16-2-2019"
+echo "Version: 3.62  - TheHogNL & TerrorSource & yjb - 18-2-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -851,9 +851,6 @@ then
 	#we need to determine current version and to which version we want to upgrade to
 	if [ "$VERSION" == "" ]
 	then 
-		#temporary disable updates due to Eneco server issue's (force version will skip this)
-		echo "Currently Eneco has problems with their update servers. Therefore this script will quit. Please try again later!"
-		exit
 		getVersion
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
