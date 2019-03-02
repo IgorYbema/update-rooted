@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.64  - TheHogNL & TerrorSource & yjb - 21-2-2019"
+echo "Version: 3.70  - TheHogNL & TerrorSource & yjb - 2-3-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -691,8 +691,9 @@ fixFiles() {
 		#busybox update disabled due to issues
 		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
 		#installBusybox
-		echo "FIXING: Installing Dropbear for ssh access"
-		installDropbear
+		#dropbear should be already there if you had root access
+		#echo "FIXING: Installing Dropbear for ssh access"
+		#installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
@@ -936,13 +937,13 @@ fi
 if [ $STEP -lt 8 ]
 then
 	STEP=8;
-	#some other fixing needs to be done after an upgrade
-	echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
-	if ! $UNATTENDED ; then read QUESTION ; fi
-	if [ "$QUESTION" == "yes" ] &&  ! $UNATTENDED #not install x11vnc in unattended mode
-	then
-		installX11vnc
-	fi
+	#skipping x11vnc install as this is an update-script and not an install-script
+	#echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
+	#if ! $UNATTENDED ; then read QUESTION ; fi
+	#if [ "$QUESTION" == "yes" ] &&  ! $UNATTENDED #not install x11vnc in unattended mode
+	#then
+	#	installX11vnc
+	#fi
 fi
 
 # sync the filesystem
