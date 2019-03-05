@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.70  - TheHogNL & TerrorSource & yjb - 2-3-2019"
+echo "Version: 3.71  - TheHogNL & TerrorSource & yjb - 5-3-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -440,9 +440,9 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="9ba9beab205a2653d664b017b18e6d04"
+		MD5SCRIPT="9c5aa397912ed6e2baac302901ff9c18"
 	else
-		MD5SCRIPT="0f1e14a01705e9c4deeca78ed9065037"
+		MD5SCRIPT="c6f78f82dfdd73ec674746be8b74cd31"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]  && $ORIGINALSOURCE
@@ -460,6 +460,7 @@ downloadUpgradeFile() {
 
 	#removing the curl logging post to the servic center
 	/bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-$ARCH.sh
+	/bin/sed -i '/grep -v LogMessageResponse/d' $PKGCACHE/upgrade-$ARCH.sh
 
 	#removing the pre exit BXT request (do not show restarting during update)
 	/bin/sed -i 's/-n InitiatePreExit/-n InitiatePreExit -t/' $PKGCACHE/upgrade-$ARCH.sh
