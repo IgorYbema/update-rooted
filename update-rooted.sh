@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.71  - TheHogNL & TerrorSource & yjb - 5-3-2019"
+echo "Version: 3.80  - TheHogNL & TerrorSource & yjb - 22-3-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -222,7 +222,7 @@ installBusybox() {
 }
 
 getVersion() {
-	VERSIONS=`/usr/bin/curl -Nks --compressed "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
+	VERSIONS=`/usr/bin/curl -Nks --compressed "https://raw.githubusercontent.com/IgorYbema/update-rooted/master/toonversions" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
 
 	if [ "$VERSIONS" == "" ]
 	then
