@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.81  - TheHogNL & TerrorSource & yjb - 22-3-2019"
+echo "Version: 3.82  - TheHogNL & TerrorSource & yjb - 13-4-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -146,6 +146,9 @@ editActivation() {
 	sed -i 's~<ElectricityDisplay>0</ElectricityDisplay>~<ElectricityDisplay>1</ElectricityDisplay>~g' /qmf/config/config_happ_scsync.xml
 	sed -i 's~<GasDisplay>0</GasDisplay>~<GasDisplay>1</GasDisplay>~g' /qmf/config/config_happ_scsync.xml
 	sed -i -e 's/\(<EndDate>\).*\(<\/EndDate>\)/<EndDate>-1<\/EndDate>/g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<mobileAccess>1</mobileAccess>~<mobileAccess>0</mobileAccess>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<supportEnabled>1</supportEnabled>~<supportEnabled>0</supportEnabled>~g' /qmf/config/config_happ_scsync.xml
+	sed -i 's~<supportEnabledStart>1</supportEnabledStart>~<supportEnabledStart>0</supportEnabledStart>~g' /qmf/config/config_happ_scsync.xml
 }
 
 removeNetworkErrorNotifications() {
