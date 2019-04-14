@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.81  - TheHogNL & TerrorSource & yjb - 22-3-2019"
+echo "Version: 3.85  - TheHogNL & TerrorSource & yjb - 14-4-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -135,6 +135,14 @@ editWifiPM(){
 	#creating file to disable wifi powermanagment after reboot
 	echo "/sbin/wl PM 0" > /etc/udhcpc.d/90tsc	
 	chmod +x /etc/udhcpc.d/90tsc
+}
+
+editAutoBrightness(){
+	#set feature auto brightness on toon2 if not exists
+	if ! cat /qmf/config/config_happ_scsync.xml | tr -d '\040\011\012\015'  | grep -q "<feature>displayAutoBrightness"
+	then
+		sed -i 's/<\/features>/<feature>displayAutoBrightness<\/feature><\/features>/' /qmf/config/config_happ_scsync.xml 
+	fi
 }
 
 editActivation() {
@@ -673,6 +681,8 @@ fixFiles() {
 		editQMFConfigFile
 		echo "EDITING: add disable power management wifi on Toon2" 
 		editWifiPM
+		echo "EDITING: add autobrightness feature on Toon2" 
+		editAutoBrightness
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
