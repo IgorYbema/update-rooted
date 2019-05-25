@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.87  - TheHogNL & TerrorSource & yjb - 21-5-2019"
+echo "Version: 3.88  - TheHogNL & TerrorSource & yjb - 25-5-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -467,7 +467,7 @@ downloadUpgradeFile() {
 	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-$ARCH.sh 
 
 	#removing the curl logging post to the servic center
-	/bin/sed -i '/curl.*31080/c\#removed curl post to service center\necho ""\n#' $PKGCACHE/upgrade-$ARCH.sh
+	/bin/sed -i '/curl.*31080/c\echo ""' $PKGCACHE/upgrade-$ARCH.sh
 	/bin/sed -i '/grep -v LogMessageResponse/d' $PKGCACHE/upgrade-$ARCH.sh
 
 	#removing the pre exit BXT request (do not show restarting during update)
