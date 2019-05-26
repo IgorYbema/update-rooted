@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.88  - TheHogNL & TerrorSource & yjb - 25-5-2019"
+echo "Version: 3.89  - TheHogNL & TerrorSource & yjb - 26-5-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -960,7 +960,7 @@ fi
 # sync the filesystem
 sync ; sync
 
-echo "Everything done! You should reboot now!"
+echo "Everything done! You should reboot now! Do NOT power cycle! Just issue the 'reboot' command in your shell. Power cycling can cause file system problems."
 
 #remove statusfile
 rm -f $STATUSFILE
