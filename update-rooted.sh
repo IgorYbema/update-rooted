@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.90  - TheHogNL & TerrorSource & yjb - 30-5-2019"
+echo "Version: 3.91  - TheHogNL & TerrorSource & yjb - 30-5-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -325,6 +325,10 @@ getArch() {
 getFlav() {
 	#determine current flavour
 	FLAV=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
+	echo "Could not determine you current running flavour."
+	echo "DEBUG:"
+	opkg list-installed base-$ARCH-\*
+        exitFail
 }
 
 makeBackupUpdate() {
