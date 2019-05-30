@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.89  - TheHogNL & TerrorSource & yjb - 26-5-2019"
+echo "Version: 3.90  - TheHogNL & TerrorSource & yjb - 30-5-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -406,11 +406,10 @@ initializeFirewall() {
 
 enableVPN() {
 	#check if feed host is configured and there is a active route toward the host
-	#if openvpn is already running we don't need to start it manually, the FEEDHOST and FEEDROUTE should match then
-	FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
+	#if openvpn is already running we don't need to start it manually, the FEEDROUTE should be there 
 	FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	COUNT=0
-	while [ ! "$FEEDHOST" == "$FEEDROUTE" ] || [ "$FEEDHOST" = "" ] || [ "$FEEDROUTE" == "" ] ; do
+	while [ "$FEEDROUTE" == "" ] ; do
 		if [ $COUNT -gt 5 ] 
 		then
 			echo "Could not enable VPN in a normal reasonable time!"
@@ -424,12 +423,14 @@ enableVPN() {
 		/bin/echo "Now starting the VPN tunnel and waiting for it to be alive and configured..."
 		/usr/sbin/openvpn --config /etc/openvpn/vpn.conf --verb 0 >/dev/null --daemon 
 		/bin/sleep 5
-		FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
 		FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	done
 	/bin/echo "Tunnel is alive and configured."
 	#set the feedhost
-	FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'`
+        FEEDHOST=$FEEDROUTE.1
+	#and overwrite the entry in the hosts file as some old toons do not do this properly
+	sed -i '/feed/d' /etc/hosts
+	echo "$FEEDHOST         feed.hae.int    feed" >> /etc/hosts
 	#allow traffic from the vpn only from the feed host, and only if it is from the www port
 	#this blocks other traffic, most important blocking the service center so other changes are not pushed
 	/usr/sbin/iptables -I UPDATE-INPUT -p tcp -s $FEEDHOST -m tcp --sport 80 -j ACCEPT
