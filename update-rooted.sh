@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.93  - TheHogNL & TerrorSource & yjb - 7-6-2019"
+echo "Version: 3.94  - TheHogNL & TerrorSource & yjb - 9-6-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -552,6 +552,13 @@ startUpgrade() {
 	fi
 
 	echo "Starting the upgrade now! Just wait a while... It can take a few minutes."
+
+	if [ "$VERSION" == "5.0.4" ] && [ "$ARCH" == "qb2" ]
+	then
+		#deleting logfiles to free up space needed for this update on a qb2
+		rm -f /HCBv2/log/*
+		rm -f $PKGCACHE/*.log
+	fi
 
 	/bin/sh $PKGCACHE/upgrade-$ARCH.sh $ARCH $FLAV $VERSION execute &
 	UPGRADE_PID=$!
