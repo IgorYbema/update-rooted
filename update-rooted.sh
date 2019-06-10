@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.55  - TheHogNL & TerrorSource & yjb - 3-2-2019"
+echo "Version: 3.94  - TheHogNL & TerrorSource & yjb - 9-6-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -29,6 +29,7 @@ usage() {
 	-s <url> provide custom repo url
 	-f Only fix files without a version update
 	-u unattended mode (always answer with yes) 
+	-o only startup vpn and then quit (allows manual package downloads using opkg) 
 	-h Display this help text
 	"
 }
@@ -136,6 +137,14 @@ editWifiPM(){
 	chmod +x /etc/udhcpc.d/90tsc
 }
 
+editAutoBrightness(){
+	#set feature auto brightness on toon2 if not exists
+	if ! cat /qmf/config/config_happ_scsync.xml | tr -d '\040\011\012\015'  | grep -q "<feature>displayAutoBrightness"
+	then
+		sed -i 's/<\/features>/<feature>displayAutoBrightness<\/feature><\/features>/' /qmf/config/config_happ_scsync.xml 
+	fi
+}
+
 editActivation() {
 	#editing config_happ_scsync.xml for activation
 	sed -i 's~Standalone~Toon~g' /qmf/config/config_happ_scsync.xml
@@ -221,7 +230,7 @@ installBusybox() {
 }
 
 getVersion() {
-	VERSIONS=`/usr/bin/curl -Nks --compressed "https://notepad.pw/raw/6fmm2o8ev" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
+	VERSIONS=`/usr/bin/curl -Nks --compressed "https://raw.githubusercontent.com/IgorYbema/update-rooted/master/toonversions" | /usr/bin/tr '\n\r' ' ' | /bin/grep STARTTOONVERSIONS | /bin/sed 's/.*#STARTTOONVERSIONS//' | /bin/sed 's/#ENDTOONVERSIONS.*//' | xargs`
 
 	if [ "$VERSIONS" == "" ]
 	then
@@ -232,6 +241,16 @@ getVersion() {
 
 	#determine current version
 	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+
+	#determine current OPKG latest version
+	OPKGVERSION=`opkg list base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/" | sort -t'.' -k1n,1n -k2n,2n -k3n,3n | tail -n1`
+
+	if [ ! "$OPKGVERSION" == "" ]  && [ ! "$RUNNINGVERSION" == "$OPKGVERSION" ]
+	then
+		echo "Your Toon already tried downloading version $OPKGVERSION before. Need to force this version!"
+		VERSION="$OPKGVERSION"
+		return
+	fi
 
 	if echo $VERSIONS| grep -q $RUNNINGVERSION
 	then
@@ -279,19 +298,12 @@ getVersion() {
 
 	if [ $VERS_MAJOR -gt $CURVERS_MAJOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -gt $CURVERS_MINOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -eq $CURVERS_MINOR -a $VERS_BUILD -gt $CURVERS_BUILD ]
 	then
-		if [ $CURVERS_MAJOR -ge 3 ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a "$RUNNINGVERSION" == "2.9.26" ] || [ $VERS_MAJOR -ge 3 -a $CURVERS_MAJOR -lt 3 -a $CURVERS_MINOR -ge 10 ] || [ $VERS_MAJOR -lt 3 ]
+		if [ $CURVERS_MAJOR -lt 5 ] && [ $VERS_MAJOR -ge 5 ] && [ "$ARCH" == "qb2" ] && [ "$VERSION" != "5.0.4" ]
 		then
-			if  [ $VERS_MAJOR -le 4 -a $VERS_MINOR -le 10 ] || [ "$RUNNINGVERSION" == "4.10.6" ] ||  [ $CURVERS_MAJOR -ge 4 -a  $CURVERS_MINOR -ge 11  ] || [ $CURVERS_MAJOR -ge 5 ]
-			then
-				echo "Alright, I will try to upgrade to" $VERSION
-			else
-				echo "You need to upgrade to 4.10.6 first! Selecting this version for you."
-				VERSION="4.10.6"
-
-			fi
+			echo "You need to upgrade to 5.0.4 first due to possible disk space issues! Selecting this version for you."
+			VERSION="5.0.4"
 		else
-			echo "You need to upgrade to 2.9.26 first! Selecting this version for you."
-			VERSION="2.9.26"
+			echo "Alright, I will try to upgrade to" $VERSION
 		fi
 	else
 		if $UNATTENDED
@@ -319,6 +331,18 @@ getArch() {
 getFlav() {
 	#determine current flavour
 	FLAV=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/"`
+	if [ "$FLAV" == "" ]
+	then
+		echo "There is no base file installed? Try to get flavour from ready to install files."
+		FLAV=`opkg list base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\1/" | sort | tail -n1`
+		if [ "$FLAV" == "" ]
+		then
+			echo "Could not determine you current running flavour."
+			echo "DEBUG:"
+			opkg list base-\*
+        		exitFail
+		fi
+	fi
 }
 
 makeBackupUpdate() {
@@ -400,11 +424,10 @@ initializeFirewall() {
 
 enableVPN() {
 	#check if feed host is configured and there is a active route toward the host
-	#if openvpn is already running we don't need to start it manually, the FEEDHOST and FEEDROUTE should match then
-	FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
+	#if openvpn is already running we don't need to start it manually, the FEEDROUTE should be there 
 	FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	COUNT=0
-	while [ ! "$FEEDHOST" == "$FEEDROUTE" ] || [ "$FEEDHOST" = "" ] || [ "$FEEDROUTE" == "" ] ; do
+	while [ "$FEEDROUTE" == "" ] ; do
 		if [ $COUNT -gt 5 ] 
 		then
 			echo "Could not enable VPN in a normal reasonable time!"
@@ -418,12 +441,14 @@ enableVPN() {
 		/bin/echo "Now starting the VPN tunnel and waiting for it to be alive and configured..."
 		/usr/sbin/openvpn --config /etc/openvpn/vpn.conf --verb 0 >/dev/null --daemon 
 		/bin/sleep 5
-		FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}' `
 		FEEDROUTE=`ip route | /bin/grep ^172.*via.*tap0 | /usr/bin/awk '{print $1}'| /usr/bin/awk 'BEGIN {FS="."}; {print $1"."$2"."$3}'`
 	done
 	/bin/echo "Tunnel is alive and configured."
 	#set the feedhost
-	FEEDHOST=`/bin/cat /etc/hosts | /bin/grep ^172 | /bin/grep feed | /usr/bin/awk 'BEGIN {FS="\t"}; {print $1}'`
+        FEEDHOST=$FEEDROUTE.1
+	#and overwrite the entry in the hosts file as some old toons do not do this properly
+	sed -i '/feed/d' /etc/hosts
+	echo "$FEEDHOST         feed.hae.int    feed" >> /etc/hosts
 	#allow traffic from the vpn only from the feed host, and only if it is from the www port
 	#this blocks other traffic, most important blocking the service center so other changes are not pushed
 	/usr/sbin/iptables -I UPDATE-INPUT -p tcp -s $FEEDHOST -m tcp --sport 80 -j ACCEPT
@@ -442,14 +467,14 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="9ba9beab205a2653d664b017b18e6d04"
+		MD5SCRIPT="662db99b9db46624232ba28cdd509675"
 	else
-		MD5SCRIPT="0f1e14a01705e9c4deeca78ed9065037"
+		MD5SCRIPT="c0e872f49e54212514257b16a57d89ff"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
-	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]
+	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]  && $ORIGINALSOURCE
 	then
-		echo "Warning: upgrade script from source server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
+		echo "Warning: upgrade script from Eneco server is changed. Do you want to continue downloading the files (if not sure, type no and report in the forums)?" 
 		if ! $UNATTENDED ; then read QUESTION; fi	
 		if [ ! "$QUESTION" == "yes" ] || $UNATTENDED  #also exit when untattended
 		then
@@ -461,7 +486,8 @@ downloadUpgradeFile() {
 	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-$ARCH.sh 
 
 	#removing the curl logging post to the servic center
-	/bin/sed -i '/curl.*31080/c\#removed curl post to service center' $PKGCACHE/upgrade-$ARCH.sh
+	/bin/sed -i '/curl.*31080/c\echo ""' $PKGCACHE/upgrade-$ARCH.sh
+	/bin/sed -i '/grep -v LogMessageResponse/d' $PKGCACHE/upgrade-$ARCH.sh
 
 	#removing the pre exit BXT request (do not show restarting during update)
 	/bin/sed -i 's/-n InitiatePreExit/-n InitiatePreExit -t/' $PKGCACHE/upgrade-$ARCH.sh
@@ -526,6 +552,13 @@ startUpgrade() {
 	fi
 
 	echo "Starting the upgrade now! Just wait a while... It can take a few minutes."
+
+	if [ "$VERSION" == "5.0.4" ] && [ "$ARCH" == "qb2" ]
+	then
+		#deleting logfiles to free up space needed for this update on a qb2
+		rm -f /HCBv2/log/*
+		rm -f $PKGCACHE/*.log
+	fi
 
 	/bin/sh $PKGCACHE/upgrade-$ARCH.sh $ARCH $FLAV $VERSION execute &
 	UPGRADE_PID=$!
@@ -674,6 +707,8 @@ fixFiles() {
 		editQMFConfigFile
 		echo "EDITING: add disable power management wifi on Toon2" 
 		editWifiPM
+		echo "EDITING: add autobrightness feature on Toon2" 
+		editAutoBrightness
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -693,8 +728,9 @@ fixFiles() {
 		#busybox update disabled due to issues
 		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
 		#installBusybox
-		echo "FIXING: Installing Dropbear for ssh access"
-		installDropbear
+		#dropbear should be already there if you had root access
+		#echo "FIXING: Installing Dropbear for ssh access"
+		#installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
@@ -710,19 +746,50 @@ fixFiles() {
 	fi
 }
 
+setOpkgFeedFiles() {
+	BASE_FEED_URL="http://feed.hae.orig/feeds"
+	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
+
+	# set extra pkg system feeds
+	EXTRA_FEEDS="`wget -q "${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed" -O -`"
+	if [ "$EXTRA_FEEDS" = "" ]
+	then
+		echo "Failed retrieving '${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed', trying again verbosely:"
+		wget "${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}/SystemFeed" -O - 2>&1
+		exitFail
+	fi
+
+	#set correct feed location for initial install
+	rm -f /etc/opkg/*-feed.conf /var/lib/opkg/lists/*
+	echo "src/gz base ${BASE_FEED_URL}/${ARCH}/${FLAV}/${RUNNINGVERSION}" > /etc/opkg/base-feed.conf
+	echo "$EXTRA_FEEDS" | {
+	while read EF
+	do
+		EF_NAME="`echo "$EF" | cut -d ' ' -f1`"
+		EF_PATH="`echo "$EF" | cut -d ' ' -f2`"
+		echo "src/gz ${EF_NAME} ${BASE_FEED_URL}/${ARCH}/${EF_PATH}" > /etc/opkg/${EF_NAME}-feed.conf
+	done;
+}
+
+echo ">> configured opkg feeds:"
+cat /etc/opkg/*-feed.conf
+}
+
 #main
 
 UNATTENDED=false
+ONLYVPNSTART=false
 STEP=0
 VERSION=""
 SOURCE="http://feed.hae.int/feeds"
+ORIGINALSOURCE=true	
 SOURCEFILES="http://files.domoticaforum.eu/uploads/Toon"
 ENABLEVPN=true
 PROGARGS="$@"
 
 
 #get options
-while getopts ":v:s:abfduh" opt $PROGARGS
+while getopts ":v:s:abfduho" opt $PROGARGS
 do
 	case $opt in
 		v)
@@ -732,6 +799,7 @@ do
 		s)
 			echo "Forcing source: $OPTARG"
 			SOURCE=$OPTARG
+			ORIGINALSOURCE=false	
 			;;
 		a)
 			echo "Auto activation"
@@ -747,6 +815,11 @@ do
 			echo "Unattended mode"
 			UNATTENDED=true
 			QUESTION="yes"
+			;;
+		o)
+			echo "Only start VPN and then quit"
+			ONLYVPNSTART=true
+			VERSION="none"
 			;;
 		d)
 			echo "Skip starting VPN"
@@ -816,6 +889,8 @@ then
 	#we need to determine current version and to which version we want to upgrade to
 	if [ "$VERSION" == "" ]
 	then 
+		#echo "Currently the Eneco server (their update script) is broken. This is causing update issue from earlier versions to 5.0.4. Canceling the updaten now until they fixed this."
+		#exit
 		getVersion
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
@@ -836,12 +911,22 @@ then
 	initializeFirewall
 	#now we are ready to try to start the VPN
 	enableVPN
+	if $ONLYVPNSTART
+	then
+		#change the official feed host to feed.hae.orig and putting back toonstore feed.hae.int to localhost
+		sed -i 's/^\(172.*\)feed.hae.int/\1feed.hae.orig/' /etc/hosts
+		echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
+		setOpkgFeedFiles
+		echo "VPN is started, OPKG sources should now be available for you. Good luck!"
+		echo "If you are done with manual package downloading, just reboot and the VPN should be closed again."
+		exit
+	fi
 fi
 
 if [ $STEP -lt 3 ] 
 then
 	STEP=3;
-	#we are ready to downlaod the eneco upgrade script
+	#we are ready to download the eneco upgrade script
 	downloadUpgradeFile
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
@@ -889,19 +974,19 @@ fi
 if [ $STEP -lt 8 ]
 then
 	STEP=8;
-	#some other fixing needs to be done after an upgrade
-	echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
-	if ! $UNATTENDED ; then read QUESTION ; fi
-	if [ "$QUESTION" == "yes" ] &&  ! $UNATTENDED #not install x11vnc in unattended mode
-	then
-		installX11vnc
-	fi
+	#skipping x11vnc install as this is an update-script and not an install-script
+	#echo "Do you want to install x11vnc? cmd 'x11vnc' needs to be run after each reboot to start the x11vnc server. x11vnc password can be set while starting x11vnc for the first time"
+	#if ! $UNATTENDED ; then read QUESTION ; fi
+	#if [ "$QUESTION" == "yes" ] &&  ! $UNATTENDED #not install x11vnc in unattended mode
+	#then
+	#	installX11vnc
+	#fi
 fi
 
 # sync the filesystem
 sync ; sync
 
-echo "Everything done! You should reboot now!"
+echo "Everything done! You should reboot now! Do NOT power cycle! Just issue the 'reboot' command in your shell. Power cycling can cause file system problems."
 
 #remove statusfile
 rm -f $STATUSFILE
