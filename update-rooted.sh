@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.95  - TheHogNL & TerrorSource & yjb - 18-6-2019"
+echo "Version: 3.96  - TheHogNL & TerrorSource & yjb - 23-6-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -569,6 +569,9 @@ startUpgrade() {
 		echo "Upgrade failed. Please check the logs at $PKGCACHE/upgrade-$ARCH.sh.log"
 		exitFail
 	fi
+
+        echo "Installing curl as in some update it is removed due to buggy dependencies..."
+        opkg install curl
 
 	echo "Upgrade done!" 
 }
