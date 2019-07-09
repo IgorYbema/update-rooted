@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.96  - TheHogNL & TerrorSource & yjb - 23-6-2019"
+echo "Version: 3.97  - TheHogNL & TerrorSource & yjb - 9-7-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -653,6 +653,8 @@ downloadResourceFile() {
 	fi
 	#install boot script to download TSC helper script if necessary
 	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then /usr/bin/curl -Nks --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/ToonSoftwareCollective/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	#fix TSC helper script download location (if necessary)
+	sed -i 's/IgorYbema/ToonSoftwareCollective/' /etc/rc5.d/S99tsc.sh
 	#download TSC helper script
 	if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc
 	then
