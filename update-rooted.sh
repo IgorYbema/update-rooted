@@ -505,8 +505,8 @@ startPrepare() {
 	#temporary fix, sonos app issue cauasing updates to fail
 	if opkg list-installed sonos | grep -q 1.0.4
 	then
-		echo "Sonos app 1.0.4 is being upgraded to 1.0.5 as it has issues causing problems with upgrading."
-		/usr/bin/opkg install http://files.domoticaforum.eu/uploads/Toon/apps/sonos-1.0.5/sonos_1.0.5-r0_qb2.ipk >/dev/null 2>&1	
+		echo "Sonos app 1.0.4 is being upgraded to 1.1.2 as it has issues causing problems with upgrading."
+		/usr/bin/opkg install http://files.domoticaforum.eu/uploads/Toon/apps/sonos-1.1.2/sonos_1.1.2-r0_qb2.ipk >/dev/null 2>&1	
 	fi
 
 	echo "Upgrade script downloaded. We need to download the upgrade files first. No upgrade is done yet. Do you want me to download the files (yes) or quit (anything else)?"
