@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.98  - TheHogNL & TerrorSource & yjb - 22-7-2019"
+echo "Version: 3.981  - TheHogNL & TerrorSource & yjb - 25-7-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -456,7 +456,7 @@ enableVPN() {
 
 downloadUpgradeFile() {
 	#try to get the upgrade file from the feed host
-	/usr/bin/wget  $SOURCE/$ARCH/upgrade/upgrade-$ARCH.sh -O $PKGCACHE/upgrade-$ARCH.sh -T 5 -t 2 -o /dev/null
+	/usr/bin/wget  $SOURCE/$ARCH/upgrade/upgrade-$ARCH.sh -O $PKGCACHE/upgrade-$ARCH.sh -T 5 -t 5 --retry-connrefused -o /dev/null
 	RESULT=$?
 
 	if [ ! $RESULT == 0 ] ; then
