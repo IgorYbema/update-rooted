@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.981  - TheHogNL & TerrorSource & yjb - 25-7-2019"
+echo "Version: 3.990  - TheHogNL & TerrorSource & yjb - 26-7-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -492,13 +492,6 @@ downloadUpgradeFile() {
 	#removing the pre exit BXT request (do not show restarting during update)
 	/bin/sed -i 's/-n InitiatePreExit/-n InitiatePreExit -t/' $PKGCACHE/upgrade-$ARCH.sh
 
-	#fixing /etc/hosts again so that toonstore can use it
-	#and change the official feed host to feed.hae.orig
-	sed -i 's/feed.hae.int/feed.hae.orig/' /etc/hosts
-	echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
-
-	#rename the feed BASEURL host to the host we changed it to according to /etc/hosts 
-	/bin/sed -i 's/feed.hae.int/feed.hae.orig/' $PKGCACHE/upgrade-$ARCH.sh 
 }
 
 startPrepare() {
@@ -752,7 +745,7 @@ fixFiles() {
 }
 
 setOpkgFeedFiles() {
-	BASE_FEED_URL="http://feed.hae.orig/feeds"
+	BASE_FEED_URL="http://feed.hae.int/feeds"
 	RUNNINGVERSION=`opkg list-installed base-$ARCH-\* | sed -r -e "s/base-$ARCH-([a-z]{3})\s-\s([0-9]*\.[0-9]*\.[0-9]*)-.*/\2/"`
 
 	# set extra pkg system feeds
@@ -918,9 +911,6 @@ then
 	enableVPN
 	if $ONLYVPNSTART
 	then
-		#change the official feed host to feed.hae.orig and putting back toonstore feed.hae.int to localhost
-		sed -i 's/^\(172.*\)feed.hae.int/\1feed.hae.orig/' /etc/hosts
-		echo '127.0.0.1  feed.hae.int  feed' >> /etc/hosts
 		setOpkgFeedFiles
 		echo "VPN is started, OPKG sources should now be available for you. Good luck!"
 		echo "If you are done with manual package downloading, just reboot and the VPN should be closed again."
