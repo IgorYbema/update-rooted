@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.992  - TheHogNL & TerrorSource & yjb - 3-9-2019"
+echo "Version: 3.993  - TheHogNL & TerrorSource & yjb - 20-9-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -467,9 +467,9 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="58f4144e7a6dcc899ee0d6f7aecb8b44"
+		MD5SCRIPT="790b5bda46902e35cea070b9ab8a22ff"
 	else
-		MD5SCRIPT="92f0188a9bd344a3f1ef5a360aba0ee7"
+		MD5SCRIPT="89ead9cb38e35035d00587e2e1193edc"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]  && $ORIGINALSOURCE
@@ -645,7 +645,7 @@ downloadResourceFile() {
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 	#install boot script to download TSC helper script if necessary
-	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then /usr/bin/curl -Nks --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/ToonSoftwareCollective/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then reboot ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then /usr/bin/curl -Nks --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/ToonSoftwareCollective/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then init q ; fi ; fi" > /etc/rc5.d/S99tsc.sh
 	#fix TSC helper script download location (if necessary)
 	sed -i 's/IgorYbema/ToonSoftwareCollective/' /etc/rc5.d/S99tsc.sh
 	#download TSC helper script
