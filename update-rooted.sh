@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.993  - TheHogNL & TerrorSource & yjb - 20-9-2019"
+echo "Version: 3.994  - TheHogNL & TerrorSource & yjb - 30-9-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -170,6 +170,19 @@ installToonStoreApps() {
 	#toonstore is mandatory, if not yet installed, install it anyway
 	for a in toonstore `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##' | grep -v toonstore`
 	do
+                #look for depencies first
+                for line in `curl -Nfks --compressed $SOURCEFILES/apps/$a/dependencies.txt`
+                do
+                        echo "Installing dependency: $line"
+                        filename=`curl -Nfks --compressed $SOURCEFILES/pkgs/$line/Packages.gz | zcat | grep Filename| cut -d\  -f2`
+                        echo $filename
+                        if [ -n $filename ]
+                        then
+                                APPURL=$SOURCEFILES/pkgs/$line/$filename
+                                opkg install $APPURL
+                        fi
+                done
+
 		latest=`curl -Nks --compressed $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
 		if [ -n $latest ]
 		then
@@ -645,7 +658,8 @@ downloadResourceFile() {
 		/usr/bin/unzip -oq /tmp/resources-$ARCH-$RUNNINGVERSION.zip -d /qmf/qml
 	fi
 	#install boot script to download TSC helper script if necessary
-	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then /usr/bin/curl -Nks --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/ToonSoftwareCollective/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if grep tscs /etc/inittab ; then init q ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	echo "if [ ! -s /usr/bin/tsc ] || grep -q no-check-certificate /usr/bin/tsc ; then /usr/bin/curl -Nks --retry 5 --connect-timeout 2 https://raw.githubusercontent.com/ToonSoftwareCollective/tscSettings/master/tsc -o /usr/bin/tsc ; chmod +x /usr/bin/tsc ; fi ; if ! grep -q tscs /etc/inittab ; then sed -i '/qtqt/a\ tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab ; if -q grep tscs /etc/inittab ; then init q ; fi ; fi" > /etc/rc5.d/S99tsc.sh
+	chmod +x /etc/rc5.d/S99tsc.sh
 	#fix TSC helper script download location (if necessary)
 	sed -i 's/IgorYbema/ToonSoftwareCollective/' /etc/rc5.d/S99tsc.sh
 	#download TSC helper script
