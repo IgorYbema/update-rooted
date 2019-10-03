@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.995  - TheHogNL & TerrorSource & yjb - 3-10-2019"
+echo "Version: 3.9951  - TheHogNL & TerrorSource & yjb - 3-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -468,8 +468,6 @@ enableVPN() {
 }
 
 downloadUpgradeFile() {
-	#remove old upgrade file if it exists
-	rm -f $PKGCACHE/upgrade-$ARCH.sh
 	#try to get the upgrade file from the feed host
 	/usr/bin/wget  $SOURCE/$ARCH/upgrade/upgrade-$ARCH.sh -O $PKGCACHE/upgrade-$ARCH.sh -T 5 -t 5 --retry-connrefused -o /dev/null
 	RESULT=$?
@@ -867,6 +865,9 @@ if ! strings /HCBv2/sbin/hcb_config | grep -q -e "^${PKGCACHE}\$"
 then
 	#this toon still uses the old PKGCACHE
 	PKGCACHE='/HCBv2/tmp/opkg-cache'
+else
+	#make sure this old dir doesn't exists anymore so we don't accidently start a very old update script (and we don't care about old logs)
+	rm -rf /HCBv2/tmp/opkg-cache
 fi
 #check if the cache dir is already there, create it otherwise (should normally be there always)
 if [ ! -d $PKGCACHE ] 
