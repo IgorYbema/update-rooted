@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.9951  - TheHogNL & TerrorSource & yjb - 3-10-2019"
+echo "Version: 3.996  - TheHogNL & TerrorSource & yjb - 15-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -480,9 +480,9 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="790b5bda46902e35cea070b9ab8a22ff"
+		MD5SCRIPT="7ad6ed4390482cfe2dc7d14652292427"
 	else
-		MD5SCRIPT="89ead9cb38e35035d00587e2e1193edc"
+		MD5SCRIPT="fd099fc464789dac57137286f1258592"
 	fi
 	MD5NOW=`/usr/bin/md5sum $PKGCACHE/upgrade-$ARCH.sh | cut -d\  -f1`
 	if [ !  "$MD5NOW" == "$MD5SCRIPT" ]  && $ORIGINALSOURCE
@@ -494,6 +494,9 @@ downloadUpgradeFile() {
 			exitFail
 		fi
 	fi
+
+	#remove auto execute feature
+	/bin/sed -i 's/^\(FEATURES=.*\)AUTO_EXECUTE/\1/' $PKGCACHE/upgrade-$ARCH.sh 
 
 	#make sure the upgrade script doesn't reboot the device after finishing
 	/bin/sed -i '/shutdown/c\#removed shutdown' $PKGCACHE/upgrade-$ARCH.sh 
