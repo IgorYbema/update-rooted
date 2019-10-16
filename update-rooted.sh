@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.9961  - TheHogNL & TerrorSource & yjb - 16-10-2019"
+echo "Version: 3.9962  - TheHogNL & TerrorSource & yjb - 16-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -311,10 +311,10 @@ getVersion() {
 
 	if [ $VERS_MAJOR -gt $CURVERS_MAJOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -gt $CURVERS_MINOR ] || [ $VERS_MAJOR -eq $CURVERS_MAJOR -a $VERS_MINOR -eq $CURVERS_MINOR -a $VERS_BUILD -gt $CURVERS_BUILD ]
 	then
-		if [ $CURVERS_MAJOR -lt 5 ] && [ $VERS_MAJOR -ge 5 ] && [ "$ARCH" == "qb2" ] && [ "$VERSION" != "5.0.4" ]
+		if [ "$ARCH" == "qb2" ] && [ $CURVERS_MAJOR -lt 5 ] && [ $VERS_MAJOR -ge 5 ] && [ "$VERSION" != "5.0.4" ] && [ "$VERSION" != "5.0.6" ]
 		then
-			echo "You need to upgrade to 5.0.4 first due to possible disk space issues! Selecting this version for you."
-			VERSION="5.0.4"
+			echo "You need to upgrade to 5.0.6 first due to possible disk space issues! Selecting this version for you."
+			VERSION="5.0.6"
 		else
 			echo "Alright, I will try to upgrade to" $VERSION
 		fi
