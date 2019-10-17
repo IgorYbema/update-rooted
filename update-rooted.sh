@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.9962  - TheHogNL & TerrorSource & yjb - 16-10-2019"
+echo "Version: 3.9963  - TheHogNL & TerrorSource & yjb - 17-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -240,6 +240,9 @@ installBusybox() {
 	else
 		echo "Custom busybox install not necessary for this firmware."
 	fi
+
+	echo "EDITING: Adding serial connection"
+	editSerialConnection
 }
 
 getVersion() {
@@ -740,20 +743,12 @@ fixFiles() {
 		fi
 		echo "FIXING: Now updating all toonstore installed apps"
 		installToonStoreApps
-		#busybox update disabled due to issues
-		#echo "FIXING: Now installing latest busybox mod. This is necessary to enable console output again which is disabled in 4.10 by Eneco." 
-		#installBusybox
-		#dropbear should be already there if you had root access
-		#echo "FIXING: Installing Dropbear for ssh access"
-		#installDropbear
 		echo "EDITING: Time server, removes unnecessary link to Quby"
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
 		editHostfile
 		echo "EDITING: disable ovpn connection to quby"
 		editVPNconnection
-		echo "EDITING: Adding serial connection"
-		editSerialConnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
 		editActivation
 		echo "EDITING: removing data gathering by Quby and whitelisting web services" 
