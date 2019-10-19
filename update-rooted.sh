@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 3.9963  - TheHogNL & TerrorSource & yjb - 17-10-2019"
+echo "Version: 4.00  - TheHogNL & TerrorSource & yjb - 19-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -129,6 +129,29 @@ editQMFConfigFile(){
 	sed -i '/quby.count.ly/d' /HCBv2/etc/qmf_tenant.xml
 	#whitelisting web service
 	sed -i 's/<enforceWhitelist>1/<enforceWhitelist>0/' /HCBv2/etc/qmf_release.xml
+}
+
+editTenantSettingsFile(){
+	#disabling QB2 subscription features
+	cp -L /HCBv2/qml/config/TenantSettings.json /HCBv2/qml/config/TenantSettings.json.save
+	sed -i 's/"appBenchmarkEnabled": true/"appBenchmarkEnabled": false/' /HCBv2/qml/config/TenantSettings.json 
+	sed -i 's/"appCustomerServiceEnabled": true/"appCustomerServiceEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appBoilerMonitorEnabled": true/"appBoilerMonitorEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWhatIsNewEnabled": true/"appWhatIsNewEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWhatIsToonEnabled": true/"appWhatIsToonEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appStatusUsageEnabled": true/"appStatusUsageEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWeather": "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
+}
+
+disableHapps() {
+	#don't need to start these on rooted toons
+	rm -f /HCBv2/etc/start.d/happ_weather
+	rm -f /HCBv2/etc/start.d/happ_kpi
+}
+
+disableNmbd() {
+	#disable samba nmbd
+	sed -i '/CONFIG_FILE/a\\n#TSC mod, do not start nmbd\nexit 0' /etc/init.d/samba
 }
 
 editWifiPM(){
@@ -341,6 +364,9 @@ getArch() {
 		ARCH="nxt"
 	else
 		ARCH="qb2"
+		#if running on a toon 1 (qb2) free up cache memory faster as updating the toon is memory intensive
+		echo 200 > /proc/sys/vm/vfs_cache_pressure
+		sync; echo 3 > /proc/sys/vm/drop_caches
 	fi
 }
 
@@ -727,6 +753,8 @@ fixFiles() {
 		editWifiPM
 		echo "EDITING: add autobrightness feature on Toon2" 
 		editAutoBrightness
+		echo "EDITING: disabling KPI and weather happ as these are not necessary on rooted toons" 
+		disableHapps
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -753,6 +781,12 @@ fixFiles() {
 		editActivation
 		echo "EDITING: removing data gathering by Quby and whitelisting web services" 
 		editQMFConfigFile
+		echo "EDITING: disabling Eneco subscription feature apps to free up memory on this toon 1" 
+		editTenantSettingsFile
+		echo "EDITING: disabling KPI and weather happ as these are not necessary on rooted toons" 
+		disableHapps
+		echo "EDITING: disabling samba nmbd on toon 1 as probably it is not necessary"
+		disableNmbd
 	fi
 }
 
