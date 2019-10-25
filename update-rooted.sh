@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.01  - TheHogNL & TerrorSource & yjb - 19-10-2019"
+echo "Version: 4.02  - TheHogNL & TerrorSource & yjb - 25-10-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -737,8 +737,12 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now updating all toonstore installed apps"
-		installToonStoreApps
+		#not installing apps anymore on versions lower then fw 5
+		if [ $VERS_MAJOR -gt 4 ]
+		then 
+			echo "FIXING: Now updating all toonstore installed apps"
+			installToonStoreApps
+		fi
 		#dropbear is not needed, no rooted toon2 without working dropbear exists
 		#echo "FIXING: Installing Dropbear for ssh access"
 		#installDropbear
@@ -772,8 +776,12 @@ fixFiles() {
 			echo "FIXING: Now modifying notifications bar to not show any network errors" 
 			removeNetworkErrorNotifications
 		fi
-		echo "FIXING: Now updating all toonstore installed apps"
-		installToonStoreApps
+		#not installing apps anymore on versions lower then fw 5
+		if [ $VERS_MAJOR -gt 4 ]
+		then 
+			echo "FIXING: Now updating all toonstore installed apps"
+			installToonStoreApps
+		fi
 		echo "EDITING: Time server, removes unnecessary link to Quby"
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
