@@ -431,7 +431,14 @@ makeBackupFixFiles() {
 	#backup qmf tenant file
 	echo creating backup of qmf_tenant.xml.save ...
 	cp /HCBv2/etc/qmf_tenant.xml /HCBv2/etc/qmf_tenant.xml.save
-
+	
+	#move backup files into folder
+	mkdir /root/backup_files/
+	mv /root/chrony.save /root/backup_files/chrony.save
+	mv /root/config_happ_scsync.save /root/backup_files/config_happ_scsync.save
+	mv /root/hosts.save /root/backup_files/hosts.save
+	mv /root/inittab.save /root/backup_files/inittab.save
+	
 	sync
 }
 
