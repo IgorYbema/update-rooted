@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.04  - TheHogNL & TerrorSource & yjb - 31-10-2019"
+echo "Version: 4.05  - TheHogNL & TerrorSource & yjb - 2-11-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -134,13 +134,13 @@ editQMFConfigFile(){
 editTenantSettingsFile(){
 	#disabling QB2 subscription features
 	cp -L /HCBv2/qml/config/TenantSettings.json /HCBv2/qml/config/TenantSettings.json.save
-	sed -i 's/"appBenchmarkEnabled": true/"appBenchmarkEnabled": false/' /HCBv2/qml/config/TenantSettings.json 
-	sed -i 's/"appCustomerServiceEnabled": true/"appCustomerServiceEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
-	sed -i 's/"appBoilerMonitorEnabled": true/"appBoilerMonitorEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
-	sed -i 's/"appWhatIsNewEnabled": true/"appWhatIsNewEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
-	sed -i 's/"appWhatIsToonEnabled": true/"appWhatIsToonEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
-	sed -i 's/"appStatusUsageEnabled": true/"appStatusUsageEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
-	sed -i 's/"appWeather": "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appBenchmarkEnabled" *: true/"appBenchmarkEnabled": false/' /HCBv2/qml/config/TenantSettings.json 
+	sed -i 's/"appCustomerServiceEnabled" *: true/"appCustomerServiceEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appBoilerMonitorEnabled" *: true/"appBoilerMonitorEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWhatIsNewEnabled" *: true/"appWhatIsNewEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWhatIsToonEnabled" *: true/"appWhatIsToonEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appStatusUsageEnabled" *: true/"appStatusUsageEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWeather" *: "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
 }
 
 disableHapps() {
