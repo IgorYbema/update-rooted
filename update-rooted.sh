@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.05  - TheHogNL & TerrorSource & yjb - 2-11-2019"
+echo "Version: 4.06  - TheHogNL & TerrorSource & yjb - 15-11-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -714,6 +714,7 @@ downloadResourceFile() {
 	if ! grep -q tscs /etc/inittab
 	then
 		sed -i '/qtqt/a\tscs:245:respawn:/usr/bin/tsc >/var/log/tsc 2>&1' /etc/inittab
+		init q
 	fi
 }
 
