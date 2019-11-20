@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.06  - TheHogNL & TerrorSource & yjb - 15-11-2019"
+echo "Version: 4.07  - TheHogNL & TerrorSource & yjb - 20-11-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -149,6 +149,8 @@ disableHapps() {
 	rm -f /HCBv2/etc/start.d/happ_kpi
 	sed -i '/happ_kpi/d' /HCBv2/etc/qmf_hardware.xml
 	sed -i '/happ_weather/d' /HCBv2/etc/qmf_hardware.xml
+	#remove weather tenant setting also, without removing this the toon boots slowly
+	sed -i 's/"appWeather" *: "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
 
 }
 
