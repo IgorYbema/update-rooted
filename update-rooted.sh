@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.07  - TheHogNL & TerrorSource & yjb - 20-11-2019"
+echo "Version: 4.08  - TheHogNL & TerrorSource & yjb - 24-11-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -198,32 +198,42 @@ installToonStoreApps() {
 	#toonstore is mandatory, if not yet installed, install it anyway
 	for a in toonstore `find /qmf/qml/apps -type l | sed 's#/qmf/qml/apps/##' | grep -v toonstore`
 	do
-                #look for depencies first
-                for line in `curl -Nfks --compressed $SOURCEFILES/apps/$a/dependencies.txt`
-                do
-                        echo "Installing dependency: $line"
-                        filename=`curl -Nfks --compressed $SOURCEFILES/pkgs/$line/Packages.gz | zcat | grep Filename| cut -d\  -f2`
-                        echo $filename
-                        if [ -n $filename ]
-                        then
-                                APPURL=$SOURCEFILES/pkgs/$line/$filename
-                                opkg install $APPURL
-                        fi
-                done
-
-		latest=`curl -Nks --compressed $SOURCEFILES/apps/ToonRepo.xml | grep $a | grep folder | sed 's/.*<folder>\(.*\)<\/folder>.*/\1/'`
-		if [ -n $latest ]
+		latestapp=`curl -NLks "https://api.github.com/repos/ToonSoftwareCollective/$a/releases/latest" | grep tag_name | cut -d\: -f2 | sed 's/.*"\(.*\)".*/\1/'`
+		if [ -s /HCBv2/qml/apps/$a/version.txt ] 
 		then
-			filename=`curl -Nks --compressed $SOURCEFILES/apps/$latest/Packages.gz | zcat | grep Filename| cut -d\  -f2`
-			if [ -n $filename ] 
-			then
-				APPURL=$SOURCEFILES/apps/$latest/$filename
-				opkg install $APPURL
-			fi
+			currentapp=`cat /HCBv2/qml/apps/$a/version.txt`
 		else
-			echo "Could not find $a in toonstore repo!"
+			#allow install new version if current version isn't known
+			currentapp=""
 		fi
+		if [ -n "$latestapp" ] && [ ! "$latestapp" == "$currentapp" ]
+		then
+			echo -n "-- Updating custom app $a to release $latestapp ... "
+			TARBALL=`curl -NLks "https://api.github.com/repos/ToonSoftwareCollective/$a/releases/latest" | grep tarball | sed 's/.*: "\(.*\)".*/\1/'`	
+			rm -rf /tmp/$a-install
+			mkdir -p /tmp/$a-install
+		        curl -NLks "$TARBALL" -o /tmp/$a-install/$a.tar.gz
+		        cd /tmp/$a-install/
+		        if tar zxf $a.tar.gz
+			then
+			        RESULT=`opkg list-installed $a`
+			        if [ -n "${RESULT}" ]
+			        then
+			                opkg remove $a
+			        fi
+			        #then remove every existing app version of the app
+			        rm -rf /qmf/qml/apps/$a*
 
+       		                APPDIR=`find /tmp/$a-install/ -type d -maxdepth 1 -mindepth 1`
+	                        mv $APPDIR /qmf/qml/apps/$a-$latestapp
+	                        #and make a symlink for the app to the appversion
+	                        ln -s /qmf/qml/apps/$a-$latestapp /qmf/qml/apps/$a
+	                        echo "DONE"
+			else
+				echo "FAILED"
+			fi
+
+		fi
 	done
 }
 
