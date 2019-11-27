@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.08  - TheHogNL & TerrorSource & yjb - 24-11-2019"
+echo "Version: 4.09  - TheHogNL & TerrorSource & yjb - 27-11-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -445,7 +445,7 @@ makeBackupFixFiles() {
 	cp /HCBv2/etc/qmf_tenant.xml /HCBv2/etc/qmf_tenant.xml.save
 	
 	#move backup files into folder
-	mkdir /root/backup_files/
+	mkdir -p /root/backup_files/
 	mv /root/chrony.save /root/backup_files/chrony.save
 	mv /root/config_happ_scsync.save /root/backup_files/config_happ_scsync.save
 	mv /root/hosts.save /root/backup_files/hosts.save
