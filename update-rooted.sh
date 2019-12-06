@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.09  - TheHogNL & TerrorSource & yjb - 27-11-2019"
+echo "Version: 4.10  - TheHogNL & TerrorSource & yjb - 6-12-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -577,6 +577,25 @@ startPrepare() {
 	fi
 
 	echo "Starting the upgrade prepare option which downloads all necessary files. No upgrade is done yet."
+
+	if [ "$ARCH" == "qb2" ]
+	then
+		echo -n "First removing some files to free some disk space. "
+		#first remove backups and zips for resources/drawables
+		rm -f /HCBv2/qml/resources-static*.rcc.*
+		rm -f /HCBv2/qml/drawables*.rcc.*
+		if readlink -f /HCBv2/qml/resources.rcc | grep -q ebl
+		then
+			echo "Removed 'base' resource files because this toon is using 'ebl' resource files."
+			rm -f /HCBv2/qml/resources-static-base.*
+			rm -f /HCBv2/qml/drawables-base.*
+		else
+			echo "Removed 'ebl' resource files because this toon is using 'base' resource files."
+			rm -f /HCBv2/qml/resources-static-ebl.*
+			rm -f /HCBv2/qml/drawables-ebl.*
+		fi
+	fi
+	
 
 	/bin/sh $PKGCACHE/upgrade-$ARCH.sh $ARCH $FLAV $VERSION prepare &
 	DOWNLOAD_PID=$!
