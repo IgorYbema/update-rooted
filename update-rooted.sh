@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.12  - TheHogNL & TerrorSource & yjb - 15-12-2019"
+echo "Version: 4.13  - TheHogNL & TerrorSource & yjb - 15-12-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -809,6 +809,8 @@ fixFiles() {
 		editAutoBrightness
 		echo "EDITING: disabling KPI and weather happ as these are not necessary on rooted toons" 
 		disableHapps
+		echo "EDITING: remove boilermonitoring subscription feature" 
+		removeBoilerMonitoring
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -845,6 +847,8 @@ fixFiles() {
 		disableHapps
 		echo "EDITING: disabling samba nmbd on toon 1 as probably it is not necessary"
 		disableNmbd
+		echo "EDITING: remove boilermonitoring subscription feature" 
+		removeBoilerMonitoring
 	fi
 }
 
