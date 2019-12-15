@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.11  - TheHogNL & TerrorSource & yjb - 14-12-2019"
+echo "Version: 4.12  - TheHogNL & TerrorSource & yjb - 15-12-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -174,6 +174,11 @@ editAutoBrightness(){
 	then
 		sed -i 's/<\/features>/<feature>displayAutoBrightness<\/feature><\/features>/' /qmf/config/config_happ_scsync.xml 
 	fi
+}
+
+removeBoilerMonitoring(){
+	#remove feature boilermonitoring as this is only for subscription users and it slows down booting if not disabled
+	sed -i 's/<feature>BoilierMonitoring<\/feature>//' /qmf/config/config_happ_scsync.xml
 }
 
 editActivation() {
