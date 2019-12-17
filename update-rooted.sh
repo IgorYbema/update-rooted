@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.13  - TheHogNL & TerrorSource & yjb - 15-12-2019"
+echo "Version: 4.14  - TheHogNL & TerrorSource & yjb - 17-12-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -539,7 +539,7 @@ downloadUpgradeFile() {
 	#check if there is a valid upgrade script
 	if [ "$ARCH" == "nxt" ] 
 	then
-		MD5SCRIPT="400a30bb59d57099a8b9679ebf5d42b7"
+		MD5SCRIPT="63a35939066a545a47adb2d8fda8d2c6"
 	else
 		MD5SCRIPT="687bdd82601817956aa8a8b9e80eb345"
 	fi
