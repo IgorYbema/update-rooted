@@ -143,6 +143,9 @@ editTenantSettingsFile(){
 	sed -i 's/"appWeather" *: "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
 	#add english translations if nl_NL is only language (like in eneco toon tenant)
 	sed -i 's/"nl_NL"$/"nl_NL","en_GB"/' /HCBv2/qml/config/TenantSettings.json
+	#remove feature boilermonitoring and wastechekers as these are only for subscription users and it slows down booting if not disabled
+	sed -i 's/<feature>boilerMonitoring<\/feature>//' /qmf/config/config_happ_scsync.xml
+	sed -i 's/<feature>wasteChecker<\/feature>//' /qmf/config/config_happ_scsync.xml
 }
 
 disableHapps() {
@@ -175,10 +178,6 @@ editAutoBrightness(){
 	fi
 }
 
-removeBoilerMonitoring(){
-	#remove feature boilermonitoring as this is only for subscription users and it slows down booting if not disabled
-	sed -i 's/<feature>BoilierMonitoring<\/feature>//' /qmf/config/config_happ_scsync.xml
-}
 
 editActivation() {
 	#editing config_happ_scsync.xml for activation
@@ -810,8 +809,6 @@ fixFiles() {
 		editTenantSettingsFile
 		echo "EDITING: disabling KPI and weather happ as these are not necessary on rooted toons" 
 		disableHapps
-		echo "EDITING: remove boilermonitoring subscription feature" 
-		removeBoilerMonitoring
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -848,8 +845,6 @@ fixFiles() {
 		disableHapps
 		echo "EDITING: disabling samba nmbd on toon 1 as probably it is not necessary"
 		disableNmbd
-		echo "EDITING: remove boilermonitoring subscription feature" 
-		removeBoilerMonitoring
 	fi
 }
 
