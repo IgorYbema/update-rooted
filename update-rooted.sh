@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.15  - TheHogNL & TerrorSource & yjb - 19-12-2019"
+echo "Version: 4.16  - TheHogNL & TerrorSource & yjb - 25-12-2019"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -140,12 +140,34 @@ editTenantSettingsFile(){
 	sed -i 's/"appWhatIsNewEnabled" *: true/"appWhatIsNewEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
 	sed -i 's/"appWhatIsToonEnabled" *: true/"appWhatIsToonEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
 	sed -i 's/"appStatusUsageEnabled" *: true/"appStatusUsageEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appUpsellEnabled" *: true/"appUpsellEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
 	sed -i 's/"appWeather" *: "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
 	#add english translations if nl_NL is only language (like in eneco toon tenant)
 	sed -i 's/"nl_NL"$/"nl_NL","en_GB"/' /HCBv2/qml/config/TenantSettings.json
 	#remove feature boilermonitoring and wastechekers as these are only for subscription users and it slows down booting if not disabled
 	sed -i 's/<feature>boilerMonitoring<\/feature>//' /qmf/config/config_happ_scsync.xml
 	sed -i 's/<feature>wasteChecker<\/feature>//' /qmf/config/config_happ_scsync.xml
+}
+
+checkCApem() {
+        SHA256ONLINE=`curl -Nks https://curl.haxx.se/ca/cacert.pem.sha256 | cut -d\  -f1`
+        SHA256CURRENT=`/usr/bin/sha256sum /etc/ssl/certs/ca-certificates.crt | cut -d\  -f1`
+        if [ !  "$SHA256CURRENT" == "$SHA256ONLINE" ] && [ -n "$SHA256ONLINE" ]
+        then
+                echo "There is a new version of the Mozilla CA pem file. Downloading it!"
+                /usr/bin/curl -Nks https://curl.haxx.se/ca/cacert.pem -o /etc/ssl/certs/ca-certificates.crt.new
+                SHA256NEW=`/usr/bin/sha256sum /etc/ssl/certs/ca-certificates.crt.new | cut -d\  -f1`
+                if [ "$SHA256ONLINE" == "$SHA256NEW" ]
+                then
+                        #Download ok! Replacing Mozilla CA pem file!
+                        if [ ! -f /etc/ssl/certs/ca-certificates.crt.orig ]
+                        then
+                                #First making a backup of the original Toon CA fileA
+                                cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.orig
+                        fi
+                        mv -f /etc/ssl/certs/ca-certificates.crt.new /etc/ssl/certs/ca-certificates.crt
+                fi
+        fi
 }
 
 disableHapps() {
@@ -809,6 +831,8 @@ fixFiles() {
 		editTenantSettingsFile
 		echo "EDITING: disabling KPI and weather happ as these are not necessary on rooted toons" 
 		disableHapps
+		echo "EDITING: download certificate store pem file"
+		checkCApem
 	else
 		#from version 4.16 we need to download resources.rcc mod
 		if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 16 ]
@@ -845,6 +869,8 @@ fixFiles() {
 		disableHapps
 		echo "EDITING: disabling samba nmbd on toon 1 as probably it is not necessary"
 		disableNmbd
+		echo "EDITING: download certificate store pem file"
+		checkCApem
 	fi
 }
 
