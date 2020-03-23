@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.16  - TheHogNL & TerrorSource & yjb - 25-12-2019"
+echo "Version: 4.17  - TheHogNL & TerrorSource & yjb - 23-03-2020"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -142,6 +142,7 @@ editTenantSettingsFile(){
 	sed -i 's/"appStatusUsageEnabled" *: true/"appStatusUsageEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
 	sed -i 's/"appUpsellEnabled" *: true/"appUpsellEnabled": false/' /HCBv2/qml/config/TenantSettings.json	
 	sed -i 's/"appWeather" *: "weather"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
+	sed -i 's/"appWeather" *: "weatherInt"/"appWeather": ""/' /HCBv2/qml/config/TenantSettings.json	
 	#add english translations if nl_NL is only language (like in eneco toon tenant)
 	sed -i 's/"nl_NL"$/"nl_NL","en_GB"/' /HCBv2/qml/config/TenantSettings.json
 	#remove feature boilermonitoring and wastechekers as these are only for subscription users and it slows down booting if not disabled
