@@ -123,7 +123,8 @@ editHostfile(){
 }
 
 disableGoogleDNS() {
-	if [ $ARCH == "nxt" ] then
+	if [ $ARCH == "nxt" ]
+	then
 		mount -o remount,rw /mnt/persist/
 		touch /mnt/persist/udhcpc-skip-prepend-google-pub-dns
 		mount -o remount,ro /mnt/persist/
