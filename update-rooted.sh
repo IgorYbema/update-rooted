@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.17  - TheHogNL & TerrorSource & yjb - 23-03-2020"
+echo "Version: 4.18  - TheHogNL & TerrorSource & yjb - 24-03-2020"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -120,6 +120,16 @@ editHostfile(){
 	#remove current comment lines + resolve ping.quby.nl to localhost
 	sed -i '/ping.quby.nl/d' /etc/hosts
 	echo '127.0.0.1    ping.quby.nl' >> /etc/hosts
+}
+
+disableGoogleDNS() {
+	if [ $ARCH == "nxt" ] then
+		mount -o remount,rw /mnt/persist/
+		touch /mnt/persist/udhcpc-skip-prepend-google-pub-dns
+		mount -o remount,ro /mnt/persist/
+	else
+		touch /mnt/persist/udhcpc-skip-prepend-google-pub-dns
+	fi
 }
 
 editQMFConfigFile(){
@@ -818,6 +828,8 @@ fixFiles() {
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
 		editHostfile
+		echo "EDITING: Disable add google DNS on top of resolv.conf" 
+		disableGoogleDNS
 		echo "EDITING: disable ovpn connection to quby"
 		editVPNconnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
@@ -858,6 +870,8 @@ fixFiles() {
 		editTimeServer
 		echo "EDITING: Hosts file, removes unnecessary link to Quby"
 		editHostfile
+		echo "EDITING: Disable add google DNS on top of resolv.conf" 
+		disableGoogleDNS
 		echo "EDITING: disable ovpn connection to quby"
 		editVPNconnection
 		echo "EDITING: Activating Toon, enabling ElectricityDisplay and GasDisplay"
