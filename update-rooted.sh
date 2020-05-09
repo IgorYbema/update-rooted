@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.20  - TheHogNL & TerrorSource & yjb - 9-05-2020"
+echo "Version: 4.21  - TheHogNL & TerrorSource & yjb - 9-05-2020"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -396,10 +396,10 @@ getVersion() {
 		then
 			echo "You need to upgrade to 5.0.6 first due to possible disk space issues! Selecting this version for you."
 			VERSION="5.0.6"
-		elif [ "$ARCH" == "nxt" ] && [ $CURVERS_MAJOR -lt 5 ] && [ $VERS_MAJOR -ge 5 ] && [ "$VERSION" != "5.0.4" ]
+		elif [ "$ARCH" == "nxt" ] && ( [ $CURVERS_MAJOR -lt 5 ] || ( [ $CURVERS_MAJOR -eq 5 ] && [ $CURVERS_MINOR -lt 25 ] ) ) && ( [ $VERS_MAJOR -gt 5 ] || ( [ $VERS_MAJOR -eq 5 ] && [ $VERS_MINOR -gt 25 ] ))
 		then
-			echo "You need to upgrade to 5.0.4 first due to problems with later firmware upgrades!" 
-			VERSION="5.0.4"
+			echo "You need to upgrade to 5.25.8 first due to problems with later firmware upgrades!" 
+			VERSION="5.25.8"
 		else
 			echo "Alright, I will try to upgrade to" $VERSION
 		fi
