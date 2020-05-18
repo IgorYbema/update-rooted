@@ -517,6 +517,33 @@ checkFixedFiles() {
 		fi
 	done
 }
+checkOVPN() {
+	value=$( grep -ic "ovpn:2" /etc/inittab )
+	if [ $value -ge 1 ]
+	then
+	  if [ $value -eq 1 ] #1x gevonden
+	  then
+			value=$( grep -ic "#ovpn" /etc/inittab )
+			if [ $value -eq 1 ]
+			then
+				GREEN='\033[0;32m' # Green
+				NC='\033[0m' # No Color
+				echo -e "${GREEN}OVPN DISABLED${NC}"
+			else
+				RED='\033[0;31m' # Red
+				NC='\033[0m' # No Color
+				echo -e "${RED}OVPN ENABLED${NC}"
+			fi
+	  elif [ $value -eq 2 ] #2x+ gevonden
+	  then
+				RED='\033[0;33m' # Red
+				NC='\033[0m' # No Color
+				echo -e "${RED}Multiple entries found, please manually edit inittab file!${NC}"
+	  else
+		echo "overige"
+		fi
+	fi 
+	}
 
 initializeFirewall() {
 	#create a new iptables chain for this upgrade process and insert it in front of all rules
@@ -1117,6 +1144,7 @@ then
 		makeBackupFixFiles
 		fixFiles
 		checkFixedFiles
+		checkOVPN
 	fi
 	echo "$STEP;$VERSION;$FLAV;$ARCH" > $STATUSFILE
 fi
