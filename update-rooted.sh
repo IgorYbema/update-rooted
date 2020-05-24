@@ -4,7 +4,7 @@ echo "==========================================================================
 echo "Welcome to the rooted Toon upgrade script. This script will try to upgrade your Toon using your original connection with Eneco. It will start the VPN if necessary."
 echo "Please be advised that running this script is at your own risk!"
 echo ""
-echo "Version: 4.23  - TheHogNL & TerrorSource & yjb - 15-05-2020"
+echo "Version: 4.24  - TheHogNL & TerrorSource & yjb & mAiden - 24-05-2020"
 echo ""
 echo "If you like the update script for rooted toons you can support me. Any donation is welcome and helps me developing the script even more."
 echo "https://paypal.me/pools/c/8bU3eQp1Jt"
@@ -12,7 +12,7 @@ echo ""
 echo "==================================================================================================================================================================="
 echo ""
 
-# YJB 19102018 usage function
+# YJB 19102018 usage function // Edit mAiden: remove busybox install 
 usage() {
 	echo ""
 	echo `basename $0`" [OPTION]
@@ -24,7 +24,6 @@ usage() {
 	Options:
 	-v <version> Upgrade to a specific version
 	-a Activation only
-	-b Installation of Busybox, OWN RISK !
 	-d Skip starting VPN
 	-s <url> provide custom repo url
 	-f Only fix files without a version update
@@ -296,31 +295,6 @@ installX11vnc(){
 		X11VNCURL=$SOURCEFILES/x11vnc_0.9.13-r3_qb2.ipk
 		opkg install $X11VNCURL
 	fi
-}
-
-installBusybox() {
-	VERS_MAJOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\1,p'`"
-	VERS_MINOR="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\2,p'`"
-	VERS_BUILD="`echo $RUNNINGVERSION | sed -n -r -e 's,([0-9]+).([0-9]+).([0-9]+),\3,p'`"
-
-	#from version 4.9 and later we need to install a custom busybox as the native removes getty 
-	if [ $VERS_MAJOR -gt 4 ] || [ $VERS_MAJOR -eq 4 -a $VERS_MINOR -ge 9 ]
-	then 
-		echo "Installing custom busybox to replace the native busybox from Eneco so we have a working getty."
-
-		BUSYBOXURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox_1.27.2-r4_qb2.ipk
-		BUSYBOXMOUNTALLURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox-mountall_1.27.2-r4_qb2.ipk
-		BUSYBOXSYSLOGURL=$SOURCEFILES/apps/busybox-1.27.2-r4/busybox-syslog_1.27.2-r4_qb2.ipk
-
-		opkg install $BUSYBOXURL
-		opkg install $BUSYBOXMOUNTALLURL
-		opkg install $BUSYBOXSYSLOGURL
-	else
-		echo "Custom busybox install not necessary for this firmware."
-	fi
-
-	echo "EDITING: Adding serial connection"
-	editSerialConnection
 }
 
 getVersion() {
